@@ -1,4 +1,5 @@
-import { useContext } from 'react';
+import { useCallback, useContext } from 'react';
+import { compile, match } from 'path-to-regexp';
 
 import { LoaderFunction, LoaderReturnValue } from '../types.ts';
 
@@ -8,6 +9,15 @@ export const useIsLoading = () => {
   const loaderContext = useContext(CurrentLoaderContext);
 
   return loaderContext.state !== 'LOADED';
+};
+
+export const useInvalidate = () => {
+  const loaderContext = useContext(LoaderContext);
+
+  console.log(loaderContext);
+  return useCallback(loaderContext?.invalidateCache || (() => {}), [
+    loaderContext?.invalidateCache,
+  ]);
 };
 
 export const useLoaderData = <T extends LoaderFunction = LoaderFunction>() => {
@@ -21,7 +31,7 @@ export const useRouteLoaderData = <T extends LoaderFunction = LoaderFunction>(
 ) => {
   const loaderContext = useContext(LoaderContext);
 
-  return loaderContext?.loadersData[route] as LoaderReturnValue<T>;
+  return loaderContext?.loadersData?.[route] as LoaderReturnValue<T>;
 };
 
 export const useIsParentRoute = (route?: string): boolean => {
@@ -34,4 +44,33 @@ export const useIsParentRoute = (route?: string): boolean => {
   }
 
   return loaderContext?.currentMatch !== currentRoute;
+};
+
+export const useFetch = (
+  route?: string
+): ((fetchInit: RequestInit) => Promise<Response>) => {
+  const invalidate = useInvalidate();
+
+  const currentLoaderContext = useContext(CurrentLoaderContext);
+
+  return useCallback(
+    async (fetchInit: RequestInit) => {
+      const uncompiledRoute = route || currentLoaderContext.route?.id || '';
+
+      const matchedRoute = match(uncompiledRoute, {
+        decode: decodeURIComponent,
+      })(window.location.toString());
+      const compiledRoute = compile(uncompiledRoute, {
+        encode: encodeURIComponent,
+      });
+
+      const finalURL = compiledRoute(matchedRoute ? matchedRoute.params : {});
+
+      return fetch(finalURL, fetchInit).then(res => {
+        invalidate();
+        return res;
+      });
+    },
+    [invalidate, route, currentLoaderContext]
+  );
 };

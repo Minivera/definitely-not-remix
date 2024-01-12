@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "Lightweight and diet full-stack React app framework for the busy developer.",
   "scripts": {
-    "example": "cd ./examples/bloggingApp && npm run dev"
+    "example": "cd ./examples/bloggingApp && tsx ./index.server.tsx"
   },
   "type": "module",
   "keywords": [
@@ -18,11 +18,13 @@
   },
   "devDependencies": {
     "@types/express": "^4.17.21",
+    "@types/multer": "^1.4.11",
     "@types/node": "^20.10.7",
     "@types/react": "^18.2.47",
     "@types/react-dom": "^18.2.18",
     "@typescript-eslint/eslint-plugin": "^6.18.0",
     "@typescript-eslint/parser": "^6.18.0",
+    "@vitejs/plugin-react": "^4.2.1",
     "eslint": "^8.56.0",
     "eslint-config-prettier": "^9.1.0",
     "eslint-config-standard": "^17.1.0",
@@ -31,10 +33,14 @@
     "eslint-plugin-promise": "^6.1.1",
     "eslint-plugin-react": "^7.33.2",
     "prettier": "^3.1.1",
-    "typescript": "^5.3.3"
+    "tsx": "^4.7.0",
+    "typescript": "^5.3.3",
+    "vite": "^5.0.11",
+    "wouter": "^2.12.1"
   },
   "dependencies": {
     "express": "^4.18.2",
+    "multer": "^1.4.5-lts.1",
     "path-to-regexp": "^6.2.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"

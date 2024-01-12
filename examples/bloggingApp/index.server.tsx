@@ -28,8 +28,6 @@ const router = frameworkRouter([
         render: PostsController.render,
         // You can use multiple actions
         post: PostsController.addPost,
-        patch: PostsController.updatePost,
-        delete: PostsController.deletePost,
       },
       {
         route: 'posts/:id',

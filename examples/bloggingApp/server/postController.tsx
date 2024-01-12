@@ -1,5 +1,5 @@
-import { FunctionComponent, PropsWithChildren } from 'react';
-import { Link } from 'wouter';
+import { FunctionComponent, PropsWithChildren, useState } from 'react';
+import { Link, useLocation } from 'wouter';
 import {
   ControllerFunction,
   json,
@@ -15,6 +15,7 @@ import { CompletePost, Comment } from '../types.ts';
 
 import { getPostByID, getPostComments } from './utils/getPosts.ts';
 import { IndexControllerLoader } from './indexController.tsx';
+import { deletePost, updatePost } from './utils/mutatePosts.ts';
 
 interface LoaderData {
   post: CompletePost;
@@ -57,9 +58,15 @@ export const PostController: {
   },
 
   component: () => {
+    const [, navigate] = useLocation();
     const loading = useIsLoading();
     const { post, comments } =
       useLoaderData<typeof PostController.load>() || {};
+
+    const [edit, setEdit] = useState(false);
+    const [title, setTitle] = useState(post.title);
+    const [body, setBody] = useState(post.body);
+    const [message, setMessage] = useState<string | null>(null);
 
     if (loading) {
       return <>Loading...</>;
@@ -68,8 +75,111 @@ export const PostController: {
     return (
       <>
         <Link to="/posts">{'<-'} Back to posts</Link>
-        <h2>{post.title}</h2>
-        <p>{post.body}</p>
+        <div>
+          <form
+            onSubmit={event => {
+              event.preventDefault();
+
+              fetch(window.location.toString(), {
+                method: 'POST',
+                body: new FormData(
+                  event.currentTarget,
+                  (event.nativeEvent as SubmitEvent).submitter
+                ),
+              })
+                .then(res => res.json())
+                .then(res => {
+                  if (res.ok) {
+                    if (res.action === 'delete') {
+                      navigate('/posts');
+                      return;
+                    }
+
+                    if (res.action === 'save') {
+                      setMessage(`Post ${res.updated.id} saved successfully.`);
+                      setEdit(false);
+                      setTitle(res.updated.title);
+                      setBody(res.updated.body);
+                      return;
+                    }
+                  }
+
+                  setMessage(`Failed to save post`);
+                });
+            }}
+          >
+            {edit ? (
+              <>
+                <div>
+                  <label htmlFor="title">Title</label>
+                  <br />
+                  <input
+                    name="title"
+                    type="text"
+                    id="title"
+                    onChange={e => setTitle(e.target.value)}
+                    value={title}
+                  />
+                </div>
+                <div>
+                  <label htmlFor="body">Content</label>
+                  <br />
+                  <textarea
+                    name="body"
+                    id="body"
+                    onChange={e => setBody(e.target.value)}
+                    value={body}
+                  />
+                </div>
+              </>
+            ) : (
+              <>
+                <h2>{title}</h2>
+                <p>{body}</p>
+              </>
+            )}
+            <div>
+              {edit ? (
+                <>
+                  <button name="action" type="submit" value="save">
+                    Save
+                  </button>
+                  <button
+                    type="button"
+                    onClick={event => {
+                      setEdit(false);
+                      event.preventDefault();
+                    }}
+                  >
+                    Cancel
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button
+                    type="button"
+                    onClick={event => {
+                      setEdit(true);
+                      event.preventDefault();
+                    }}
+                  >
+                    Edit
+                  </button>
+                  <button name="action" type="submit" value="delete">
+                    Delete
+                  </button>
+                </>
+              )}
+            </div>
+            {message && (
+              <div>
+                <br />
+                {message}
+              </div>
+            )}
+          </form>
+        </div>
+        <br />
         <Link to="/users">By {post.user?.name || 'Unknown'}</Link>
         <ul style={{ marginLeft: 15 }}>
           {comments.map(comment => (
@@ -83,5 +193,37 @@ export const PostController: {
     );
   },
 
-  action: () => {},
+  action: async request => {
+    const postId = request.params.id;
+
+    if (request.body.action === 'delete') {
+      await deletePost(postId);
+
+      return json({
+        ok: true,
+        action: request.body.action,
+      });
+    }
+
+    if (request.body.action === 'save') {
+      const updated = await updatePost(postId, {
+        id: Number.parseInt(postId),
+        title: request.body.title,
+        body: request.body.body,
+        userId: 1,
+      });
+
+      return json({
+        ok: true,
+        action: request.body.action,
+        updated,
+      });
+    }
+
+    return json({
+      ok: false,
+      action: request.body.action,
+      error: 'Unknown action',
+    });
+  },
 };

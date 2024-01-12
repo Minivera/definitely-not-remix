@@ -37,7 +37,7 @@ export const Component: FunctionComponent<PropsWithChildren> = ({
   const isParent = useIsParentRoute();
 
   if (isParent) {
-    return <App users={users}>{children}</App>;
+    return <App>{children}</App>;
   }
 
   if (loading) {

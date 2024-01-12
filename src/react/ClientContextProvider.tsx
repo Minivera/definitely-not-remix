@@ -27,10 +27,13 @@ export const ClientContextProvider: FunctionComponent<PropsWithChildren> = ({
       (window as unknown as { contextData: string }).contextData || '{}'
     ),
   }));
-  const [currentContext, setCurrentContext] = useState<LoaderContextValue>(() =>
-    JSON.parse(
-      (window as unknown as { contextData: string }).contextData || '{}'
-    )
+  const [currentContext, setCurrentContext] = useState<LoaderContextValue>(
+    () => ({
+      ...JSON.parse(
+        (window as unknown as { contextData: string }).contextData || '{}'
+      ),
+      matchedRoute: window.location.toString(),
+    })
   );
 
   const fetchRouteData = useCallback(
@@ -50,8 +53,41 @@ export const ClientContextProvider: FunctionComponent<PropsWithChildren> = ({
     [contextsCache, setCurrentContext, setContextsCache]
   );
 
+  const getCachedRoute = useCallback(
+    (route: string) => {
+      if (contextsCache[route]) {
+        return contextsCache[route];
+      }
+
+      return undefined;
+    },
+    [contextsCache]
+  );
+
+  const invalidateCache = useCallback(async () => {
+    setCurrentContext(currentContext => ({
+      ...currentContext,
+      loadersData: undefined,
+    }));
+    setContextsCache({});
+
+    const data = await fetchAllMatchingLoaders(window.location.toString());
+    setCurrentContext(data);
+    setContextsCache(cache => ({
+      ...cache,
+      [window.location.toString()]: data,
+    }));
+  }, [setContextsCache, setCurrentContext, window.location, fetchRouteData]);
+
   return (
-    <LoaderContext.Provider value={{ ...currentContext, fetchRouteData }}>
+    <LoaderContext.Provider
+      value={{
+        ...currentContext,
+        fetchRouteData,
+        getCachedRoute,
+        invalidateCache,
+      }}
+    >
       {children}
     </LoaderContext.Provider>
   );

@@ -1,6 +1,7 @@
 import { ReactElement } from 'react';
 import express, { Express } from 'express';
 import { join as pathJoin } from 'node:path/posix';
+import multer from 'multer';
 
 import {
   ControllerFunction,
@@ -30,6 +31,8 @@ const convertRouteToInternal = (
   ),
 });
 
+const upload = multer();
+
 class Router {
   private readonly routes: InternalRoutes;
   // @ts-expect-error TS6133
@@ -42,6 +45,9 @@ class Router {
     this.options = options;
 
     this.app = express();
+
+    this.app.use(express.json());
+    this.app.use(express.urlencoded({ extended: true }));
   }
 
   use(middleware: express.Handler) {
@@ -109,7 +115,7 @@ class Router {
 
       if (route.action) {
         const actionFunc = route.action;
-        this.app.all(route.id, async (req, res) => {
+        this.app.all(route.id, upload.none(), async (req, res) => {
           const result = await actionFunc(req);
           return writeExpressResponse(res, result);
         });

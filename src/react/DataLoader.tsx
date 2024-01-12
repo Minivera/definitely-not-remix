@@ -3,8 +3,8 @@ import {
   PropsWithChildren,
   useContext,
   useEffect,
+  useState,
 } from 'react';
-import { match } from 'path-to-regexp';
 
 import { CurrentLoaderContext, LoaderContext } from './loaderContext.ts';
 import { InternalRoute } from '../types.ts';
@@ -16,6 +16,9 @@ export interface DataLoaderProps {
 export const DataLoader: FunctionComponent<
   PropsWithChildren<DataLoaderProps>
 > = ({ children, route }) => {
+  const [matchedRoute, setMatchedRoute] = useState(() =>
+    typeof window !== 'undefined' ? window.location.toString() : undefined
+  );
   const serverContext = useContext(LoaderContext);
 
   if (!serverContext) {
@@ -26,37 +29,50 @@ export const DataLoader: FunctionComponent<
     return null;
   }
 
-  const { loadersData, allRoutes, routesChain, currentRoute, currentMatch } =
+  let { loadersData, allRoutes, routesChain, currentRoute, currentMatch } =
     serverContext;
+
+  const routeMatched =
+    typeof window !== 'undefined'
+      ? matchedRoute === window.location.toString()
+      : true;
 
   useEffect(() => {
     if (typeof window === 'undefined') {
       return;
     }
 
-    const currentLocation = window.location.pathname;
-    if (!match(currentMatch, { decode: decodeURIComponent })(currentLocation)) {
-      // TODO: Stop the screen from flashing when the data is in the cache
-      serverContext.fetchRouteData?.(window.location.toString());
+    if (!routeMatched) {
+      serverContext.fetchRouteData?.(window.location.toString()).then(() => {
+        setMatchedRoute(window.location.toString());
+      });
     }
-  }, [
-    typeof window !== 'undefined' ? window.location.pathname : undefined,
-    currentMatch,
-    serverContext.fetchRouteData,
-  ]);
+  }, [routeMatched, serverContext.fetchRouteData, setMatchedRoute]);
 
   if (typeof window !== 'undefined') {
-    const currentLocation = window.location.pathname;
-    if (!match(currentMatch, { decode: decodeURIComponent })(currentLocation)) {
-      return (
-        <CurrentLoaderContext.Provider
-          value={{
-            state: 'LOADING',
-          }}
-        >
-          {children}
-        </CurrentLoaderContext.Provider>
+    if (!routeMatched) {
+      const cachedData = serverContext.getCachedRoute?.(
+        window.location.toString()
       );
+      if (!cachedData) {
+        return (
+          <CurrentLoaderContext.Provider
+            value={{
+              state: 'LOADING',
+            }}
+          >
+            {children}
+          </CurrentLoaderContext.Provider>
+        );
+      }
+
+      // If we have some cache we're going to invalidate soon, then use it for now
+      // to avoid flashing loaders.
+      loadersData = cachedData.loadersData;
+      allRoutes = cachedData.allRoutes;
+      routesChain = cachedData.routesChain;
+      currentRoute = cachedData.currentRoute;
+      currentMatch = cachedData.currentMatch;
     }
   }
 
@@ -65,8 +81,8 @@ export const DataLoader: FunctionComponent<
     return (
       <CurrentLoaderContext.Provider
         value={{
-          state: 'LOADED',
-          data: loadersData[route],
+          state: !loadersData ? 'LOADING' : 'LOADED',
+          data: loadersData?.[route],
           route: routesChain.find(route => route.id === currentRoute?.id),
         }}
       >
@@ -87,6 +103,7 @@ export const DataLoader: FunctionComponent<
   return (
     <LoaderContext.Provider
       value={{
+        ...serverContext,
         currentMatch,
         loadersData,
         routesChain,
@@ -96,8 +113,8 @@ export const DataLoader: FunctionComponent<
     >
       <CurrentLoaderContext.Provider
         value={{
-          state: 'LOADED',
-          data: currentRoute ? loadersData[currentRoute.id] : undefined,
+          state: !loadersData ? 'LOADING' : 'LOADED',
+          data: currentRoute ? loadersData?.[currentRoute.id] : undefined,
           route: currentRoute,
         }}
       >
