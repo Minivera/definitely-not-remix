@@ -1,4 +1,11 @@
-import { FunctionComponent, PropsWithChildren, useContext } from 'react';
+import {
+  FunctionComponent,
+  PropsWithChildren,
+  useContext,
+  useEffect,
+} from 'react';
+import { match } from 'path-to-regexp';
+
 import { CurrentLoaderContext, LoaderContext } from './loaderContext.ts';
 import { InternalRoute } from '../types.ts';
 
@@ -12,21 +19,53 @@ export const DataLoader: FunctionComponent<
   const serverContext = useContext(LoaderContext);
 
   if (!serverContext) {
-    // TODO: Write client code
+    // TODO: Handle the "no context" state
+    console.error(
+      'No server context detected, did you forget to wrap your app in a `ClientContextProvider`?'
+    );
     return null;
   }
 
   const { loadersData, allRoutes, routesChain, currentRoute, currentMatch } =
     serverContext;
 
-  // TODO: We'll need to handle routing and check if we can't find the correct route chain for the current window
-  // TODO: location.
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    const currentLocation = window.location.pathname;
+    if (!match(currentMatch, { decode: decodeURIComponent })(currentLocation)) {
+      // TODO: Stop the screen from flashing when the data is in the cache
+      serverContext.fetchRouteData?.(window.location.toString());
+    }
+  }, [
+    typeof window !== 'undefined' ? window.location.pathname : undefined,
+    currentMatch,
+    serverContext.fetchRouteData,
+  ]);
+
+  if (typeof window !== 'undefined') {
+    const currentLocation = window.location.pathname;
+    if (!match(currentMatch, { decode: decodeURIComponent })(currentLocation)) {
+      return (
+        <CurrentLoaderContext.Provider
+          value={{
+            state: 'LOADING',
+          }}
+        >
+          {children}
+        </CurrentLoaderContext.Provider>
+      );
+    }
+  }
 
   if (route) {
     // If we provided an explicit route, load this one and do not touch the route chain
     return (
       <CurrentLoaderContext.Provider
         value={{
+          state: 'LOADED',
           data: loadersData[route],
           route: routesChain.find(route => route.id === currentRoute?.id),
         }}
@@ -57,6 +96,7 @@ export const DataLoader: FunctionComponent<
     >
       <CurrentLoaderContext.Provider
         value={{
+          state: 'LOADED',
           data: currentRoute ? loadersData[currentRoute.id] : undefined,
           route: currentRoute,
         }}

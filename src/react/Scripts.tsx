@@ -7,10 +7,20 @@ export const Scripts: FunctionComponent = () => {
   return (
     <script
       type="module"
+      suppressHydrationWarning
       dangerouslySetInnerHTML={{
-        __html: `window.contextData = ${JSON.stringify(
-          JSON.stringify(globalContext)
-        )};`,
+        __html: `window.contextData = ${
+          typeof window === 'undefined'
+            ? JSON.stringify(
+                JSON.stringify({
+                  ...globalContext,
+                  currentRoute: globalContext?.routesChain[0],
+                })
+              )
+            : JSON.stringify(
+                (window as unknown as { contextData: unknown }).contextData
+              )
+        };`,
       }}
     />
   );

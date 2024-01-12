@@ -4,6 +4,12 @@ import { LoaderFunction, LoaderReturnValue } from '../types.ts';
 
 import { CurrentLoaderContext, LoaderContext } from './loaderContext.ts';
 
+export const useIsLoading = () => {
+  const loaderContext = useContext(CurrentLoaderContext);
+
+  return loaderContext.state !== 'LOADED';
+};
+
 export const useLoaderData = <T extends LoaderFunction = LoaderFunction>() => {
   const loaderContext = useContext(CurrentLoaderContext);
 

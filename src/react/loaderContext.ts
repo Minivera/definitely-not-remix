@@ -7,15 +7,18 @@ export interface LoaderContextValue {
   allRoutes: InternalRoutes;
   routesChain: InternalRoutes;
   currentRoute?: InternalRoute;
+
+  fetchRouteData?: (route: string) => Promise<void>;
 }
 
 export const LoaderContext = createContext<LoaderContextValue | null>(null);
 
 export interface CurrentLoaderContextValue {
+  state: 'LOADED' | 'LOADING' | 'MISSING';
   data?: unknown;
   route?: InternalRoute;
 }
 
-export const CurrentLoaderContext = createContext<CurrentLoaderContextValue>(
-  {}
-);
+export const CurrentLoaderContext = createContext<CurrentLoaderContextValue>({
+  state: 'MISSING',
+});

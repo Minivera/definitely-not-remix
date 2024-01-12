@@ -1,11 +1,20 @@
-import { frameworkRouter, Request } from '../../src';
+import { dirname } from 'path';
+import { fileURLToPath } from 'url';
+import { ReactElement } from 'react';
+import { Router } from 'wouter';
 import { createServer as createViteServer } from 'vite';
+import { frameworkRouter, Request } from '../../src';
 
 import {
   IndexControllerLoader,
   IndexControllerRender,
 } from './server/indexController';
 import { PostsController } from './server/postsController.tsx';
+import { PostController } from './server/postController.tsx';
+import { UsersController } from './server/usersController.tsx';
+import { Root } from './client/Root.tsx';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 const router = frameworkRouter([
   {
@@ -17,31 +26,23 @@ const router = frameworkRouter([
         route: 'posts',
         load: PostsController.load,
         render: PostsController.render,
+        // You can use multiple actions
         post: PostsController.addPost,
+        patch: PostsController.updatePost,
+        delete: PostsController.deletePost,
       },
-      /* {
+      {
         route: 'posts/:id',
         load: PostController.load,
         render: PostController.render,
-        // Can use a single action like in Remix
+        // Or use a single action like in Remix
         action: PostController.action,
-        children: [
-          {
-            route: 'comments/:commentId',
-            load: CommentController.load,
-            render: CommentController.render,
-            // Or use multiple actions
-            post: CommentController.addComment,
-            patch: CommentController.updateComment,
-            delete: CommentController.deleteComment,
-          },
-        ],
       },
       {
         route: 'users',
-        load: UserController.load,
-        render: UserController.render,
-      }, */
+        load: UsersController.load,
+        render: UsersController.render,
+      },
     ],
   },
 ]);
@@ -57,6 +58,11 @@ const main = async () => {
 
   router
     .serve(8080, {
+      appWrapper: (request: Request, app: ReactElement | null) => (
+        <Root>
+          <Router ssrPath={request.path}>{app}</Router>
+        </Root>
+      ),
       handleRender: (request: Request, html) => {
         return vite.transformIndexHtml(request.originalUrl, html);
       },

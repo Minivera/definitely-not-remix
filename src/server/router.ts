@@ -1,3 +1,4 @@
+import { ReactElement } from 'react';
 import express, { Express } from 'express';
 import { join as pathJoin } from 'node:path/posix';
 
@@ -12,7 +13,7 @@ import {
 
 import { writeExpressResponse } from './response.ts';
 import { resolveAllMatchingLoaders } from './loaders.ts';
-import { renderComponentChain } from './renderer.tsx';
+import { renderComponentChain, renderLoaderChain } from './renderer.tsx';
 
 export interface RouterOptions {
   mode?: 'developement' | 'production';
@@ -30,11 +31,11 @@ const convertRouteToInternal = (
 });
 
 class Router {
-  private routes: InternalRoutes;
+  private readonly routes: InternalRoutes;
   // @ts-expect-error TS6133
-  private options: RouterOptions;
+  private readonly options: RouterOptions;
 
-  private app: Express;
+  private readonly app: Express;
 
   constructor(routes: Routes, options: RouterOptions) {
     this.routes = routes.map(route => convertRouteToInternal(route, []));
@@ -50,29 +51,41 @@ class Router {
   async serve(
     port: number,
     options?: {
+      appWrapper?: (
+        request: Request,
+        component: ReactElement | null
+      ) => ReactElement | null;
       handleRender?: (
         request: Request,
         html: string
       ) => string | Promise<string>;
     }
   ) {
-    // TODO: Validate that all routes must start with a forward slash
     const addRouteToRouter = (
       route: InternalRoute,
       parents: InternalRoutes
     ) => {
       if (route.render || route.load) {
         this.app.get(route.id, async (req, res) => {
-          if (
-            (route.load && !route.render) ||
-            (route.load && req.header('X-Data-Only') === 'true')
-          ) {
+          if (route.load && !route.render) {
             const loadedData = await resolveAllMatchingLoaders(req, req.path, [
               ...parents,
               route,
             ]);
             const result = loadedData[route.id];
             return writeExpressResponse(res, result[0]);
+          }
+
+          if (route.load && req.header('X-Data-Only') === 'true') {
+            const loadedData = await resolveAllMatchingLoaders(req, req.path, [
+              ...parents,
+              route,
+            ]);
+
+            return writeExpressResponse(
+              res,
+              renderLoaderChain(this.routes, loadedData, [...parents, route])
+            );
           }
 
           // Component nesting. We should load all parent routes first to get the data, then
@@ -82,14 +95,13 @@ class Router {
             route,
           ]);
 
-          // TODO: We'll want to provide the loaded data through a custom context provider and not through the render function
-          // TODO: since that won't convert well to the client side of things.
           const result = await renderComponentChain(
             this.routes,
             loadedData,
             [...parents, route],
             html =>
-              options?.handleRender ? options?.handleRender(req, html) : html
+              options?.handleRender ? options?.handleRender(req, html) : html,
+            app => (options?.appWrapper ? options?.appWrapper(req, app) : app)
           );
           return writeExpressResponse(res, result);
         });

@@ -3,8 +3,9 @@
   "version": "1.0.0",
   "description": "Lightweight and diet full-stack React app framework for the busy developer.",
   "scripts": {
-    "example": "tsx ./examples/bloggingApp/index.server.ts"
+    "example": "cd ./examples/bloggingApp && npm run dev"
   },
+  "type": "module",
   "keywords": [
     "full-stack",
     "api",
@@ -30,14 +31,12 @@
     "eslint-plugin-promise": "^6.1.1",
     "eslint-plugin-react": "^7.33.2",
     "prettier": "^3.1.1",
-    "tsx": "^4.7.0",
     "typescript": "^5.3.3"
   },
   "dependencies": {
-    "@vitejs/plugin-react": "^4.2.1",
     "express": "^4.18.2",
+    "path-to-regexp": "^6.2.1",
     "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "vite": "^5.0.11"
+    "react-dom": "^18.2.0"
   }
 }
