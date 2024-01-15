@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "description": "Lightweight and diet full-stack React app framework for the busy developer.",
   "scripts": {
-    "example": "cd ./examples/bloggingApp && tsx ./index.server.tsx"
+    "example:blog": "cd ./examples/bloggingApp && tsx ./index.server.tsx",
+    "example:todo": "cd ./examples/todoMVC && tsx ./index.server.tsx"
   },
   "type": "module",
   "keywords": [
@@ -32,6 +33,7 @@
     "eslint-plugin-n": "^16.6.1",
     "eslint-plugin-promise": "^6.1.1",
     "eslint-plugin-react": "^7.33.2",
+    "lowdb": "^7.0.1",
     "prettier": "^3.1.1",
     "tsx": "^4.7.0",
     "typescript": "^5.3.3",

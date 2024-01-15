@@ -14,7 +14,6 @@ export const useIsLoading = () => {
 export const useInvalidate = () => {
   const loaderContext = useContext(LoaderContext);
 
-  console.log(loaderContext);
   return useCallback(loaderContext?.invalidateCache || (() => {}), [
     loaderContext?.invalidateCache,
   ]);
