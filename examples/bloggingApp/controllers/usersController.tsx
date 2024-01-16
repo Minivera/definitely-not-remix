@@ -56,7 +56,7 @@ export const UsersController: {
     return (
       <>
         <h2>All Users</h2>
-        <Link to="/">{'<-'} Back to Home</Link>
+        <Link href="/">{'<-'} Back to Home</Link>
         <UsersList users={users} />
       </>
     );

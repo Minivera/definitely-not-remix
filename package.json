@@ -4,7 +4,8 @@
   "description": "Lightweight and diet full-stack React app framework for the busy developer.",
   "scripts": {
     "example:blog": "cd ./examples/bloggingApp && tsx ./index.server.tsx",
-    "example:todo": "cd ./examples/todoMVC && tsx ./index.server.tsx"
+    "example:todo": "cd ./examples/todoMVC && tsx ./index.server.tsx",
+    "example:remix": "cd ./examples/remixTutorial && tsx ./index.server.tsx"
   },
   "type": "module",
   "keywords": [

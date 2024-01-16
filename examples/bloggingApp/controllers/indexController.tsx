@@ -48,7 +48,7 @@ export const Component: FunctionComponent<PropsWithChildren> = ({
     <App users={users}>
       <h2>Last five posts</h2>
       <nav>
-        <Link to="/posts">All posts</Link> <Link to="/users">All users</Link>
+        <Link href="/posts">All posts</Link> <Link to="/users">All users</Link>
       </nav>
       <PostsList posts={posts} />
     </App>

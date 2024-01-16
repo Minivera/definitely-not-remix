@@ -68,7 +68,7 @@ export const PostsController: {
     return (
       <>
         <h2>All posts</h2>
-        <Link to="/">{'<-'} Back to Home</Link>
+        <Link href="/">{'<-'} Back to Home</Link>
         <form
           onSubmit={event => {
             setSuccess(null);

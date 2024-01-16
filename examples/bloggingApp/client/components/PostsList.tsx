@@ -13,10 +13,10 @@ export const PostsList: FunctionComponent<PostsListProps> = ({ posts }) =>
       {posts.map(post => (
         <li key={post.id}>
           <h3>
-            <Link to={`/posts/${post.id}`}>{post.title}</Link>
+            <Link href={`/posts/${post.id}`}>{post.title}</Link>
           </h3>
           <p>{post.body}</p>
-          <Link to="/users">By {post.user?.name || 'Unknown'}</Link>
+          <Link href="/users">By {post.user?.name || 'Unknown'}</Link>
         </li>
       ))}
     </ul>

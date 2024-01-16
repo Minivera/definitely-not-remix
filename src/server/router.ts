@@ -82,6 +82,10 @@ class Router {
             return writeExpressResponse(res, result[0]);
           }
 
+          // TODO: We should allow us to fetch a single loader data when we only need to refresh one loader out of
+          // TODO: a whole route chain. If we detect we fetch a new path, let's fetch everything. If instead we
+          // TODO: change a leaf, then let's only update that leaf and its children. We should keep the state management
+          // TODO: on the frontend and only handle dataloading and responses.
           if (route.load && req.header('X-Data-Only') === 'true') {
             const loadedData = await resolveAllMatchingLoaders(req, req.path, [
               ...parents,

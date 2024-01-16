@@ -74,7 +74,7 @@ export const PostController: {
 
     return (
       <>
-        <Link to="/posts">{'<-'} Back to posts</Link>
+        <Link href="/posts">{'<-'} Back to posts</Link>
         <div>
           <form
             onSubmit={event => {
@@ -180,7 +180,7 @@ export const PostController: {
           </form>
         </div>
         <br />
-        <Link to="/users">By {post.user?.name || 'Unknown'}</Link>
+        <Link href="/users">By {post.user?.name || 'Unknown'}</Link>
         <ul style={{ marginLeft: 15 }}>
           {comments.map(comment => (
             <li key={comment.id}>

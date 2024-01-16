@@ -37,17 +37,24 @@ export const DataLoader: FunctionComponent<
       ? matchedRoute === window.location.toString()
       : true;
 
+  // TODO: Drop this whole thing in favor of asking the consumer when the loaders should update
+  // TODO: and when we should rely on the cache.
   useEffect(() => {
     if (typeof window === 'undefined') {
       return;
     }
 
-    if (!routeMatched) {
+    if (!routeMatched || !currentRoute) {
       serverContext.fetchRouteData?.(window.location.toString()).then(() => {
         setMatchedRoute(window.location.toString());
       });
     }
-  }, [routeMatched, serverContext.fetchRouteData, setMatchedRoute]);
+  }, [
+    routeMatched,
+    currentRoute,
+    serverContext.fetchRouteData,
+    setMatchedRoute,
+  ]);
 
   if (typeof window !== 'undefined') {
     if (!routeMatched) {

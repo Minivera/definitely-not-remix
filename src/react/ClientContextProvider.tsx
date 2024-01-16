@@ -38,6 +38,8 @@ export const ClientContextProvider: FunctionComponent<PropsWithChildren> = ({
 
   const fetchRouteData = useCallback(
     async (route: string) => {
+      // TODO: We should keep the current route data loaded when loading
+      // TODO: subroutes. To avoid flickering parents.
       if (contextsCache[route]) {
         setCurrentContext(contextsCache[route]);
         return;

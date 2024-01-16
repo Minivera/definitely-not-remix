@@ -1,45 +1,34 @@
 import { dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { ReactElement } from 'react';
-import { Router } from 'wouter';
 import { createServer as createViteServer } from 'vite';
 import { frameworkRouter, Request } from '../../src';
+import { Router } from 'wouter';
 
-import {
-  IndexControllerLoader,
-  IndexControllerRender,
-} from './controllers/indexController';
-import { PostsController } from './controllers/postsController.tsx';
-import { PostController } from './controllers/postController.tsx';
-import { UsersController } from './controllers/usersController.tsx';
-import { Root } from './client/Root.tsx';
+import { Root } from './app/Root.tsx';
+import { Root as RootView } from './views/root.tsx';
+import { Index } from './views/_index.tsx';
+import { Contact } from './views/contact.tsx';
+import { RootAction, RootLoader } from './controllers/rootController.ts';
+import { ContactLoader } from './controllers/contactController.ts';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 const router = frameworkRouter([
   {
     route: '/',
-    load: IndexControllerLoader,
-    render: IndexControllerRender,
+    load: RootLoader,
+    action: RootAction,
+    render: RootView,
     children: [
       {
-        route: 'posts',
-        load: PostsController.load,
-        render: PostsController.render,
-        // You can use multiple actions
-        post: PostsController.addPost,
+        route: '/contacts/:contactId',
+        load: ContactLoader,
+        render: Contact,
       },
       {
-        route: 'posts/:id',
-        load: PostController.load,
-        render: PostController.render,
-        // Or use a single action like in Remix
-        action: PostController.action,
-      },
-      {
-        route: 'users',
-        load: UsersController.load,
-        render: UsersController.render,
+        route: '*',
+        render: Index,
       },
     ],
   },

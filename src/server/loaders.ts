@@ -19,6 +19,10 @@ export const resolveAllMatchingLoaders = async (
   const subApp = express();
 
   for (const route of chain) {
+    if (!route.load) {
+      continue;
+    }
+
     subApp.get(route.id, async (req, res) => {
       if (!route.load) {
         return;
@@ -29,6 +33,7 @@ export const resolveAllMatchingLoaders = async (
           Object.entries(dataForMatch).map(([key, tupple]) => [key, tupple[1]])
         ),
       });
+      // TODO: Handle returned and thrown errors by the loaders
       if (
         result.status === 200 &&
         result.headers.has('X-Data-Source') &&
