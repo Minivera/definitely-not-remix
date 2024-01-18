@@ -72,48 +72,58 @@ class Router {
       parents: InternalRoutes
     ) => {
       if (route.render || route.load) {
-        this.app.get(route.id, async (req, res) => {
-          if (route.load && !route.render) {
+        this.app.get(route.id, async (req, res, next) => {
+          try {
+            if (route.load && !route.render) {
+              const loadedData = await resolveAllMatchingLoaders(
+                req,
+                req.path,
+                [...parents, route]
+              );
+              const result = loadedData[route.id];
+              return writeExpressResponse(res, result[0]);
+            }
+
+            // TODO: We should keep the state management on the frontend and only handle dataloading and responses.
+            // TODO: In the future, we should change this so we only return the loaded data, not the whole payload
+            // TODO: for the context including the current match and other things like that.
+            if (route.load && req.header('X-Data-Only') === 'true') {
+              const loadedData = await resolveAllMatchingLoaders(
+                req,
+                req.path,
+                [...parents, route]
+              );
+
+              return writeExpressResponse(
+                res,
+                renderLoaderChain(this.routes, loadedData, [...parents, route])
+              );
+            }
+
+            (global as unknown as { requestLocation: string }).requestLocation =
+              req.originalUrl;
+            // Component nesting. We should load all parent routes first to get the data, then
+            // render backwards to get the components and add them as "children" of the parent component.
             const loadedData = await resolveAllMatchingLoaders(req, req.path, [
               ...parents,
               route,
             ]);
-            const result = loadedData[route.id];
-            return writeExpressResponse(res, result[0]);
-          }
 
-          // TODO: We should allow us to fetch a single loader data when we only need to refresh one loader out of
-          // TODO: a whole route chain. If we detect we fetch a new path, let's fetch everything. If instead we
-          // TODO: change a leaf, then let's only update that leaf and its children. We should keep the state management
-          // TODO: on the frontend and only handle dataloading and responses.
-          if (route.load && req.header('X-Data-Only') === 'true') {
-            const loadedData = await resolveAllMatchingLoaders(req, req.path, [
-              ...parents,
-              route,
-            ]);
-
-            return writeExpressResponse(
-              res,
-              renderLoaderChain(this.routes, loadedData, [...parents, route])
+            const result = await renderComponentChain(
+              this.routes,
+              loadedData,
+              [...parents, route],
+              html =>
+                options?.handleRender ? options?.handleRender(req, html) : html,
+              app => (options?.appWrapper ? options?.appWrapper(req, app) : app)
             );
+
+            delete (global as unknown as { requestLocation?: string })
+              .requestLocation;
+            return writeExpressResponse(res, result);
+          } catch (err) {
+            next(err);
           }
-
-          // Component nesting. We should load all parent routes first to get the data, then
-          // render backwards to get the components and add them as "children" of the parent component.
-          const loadedData = await resolveAllMatchingLoaders(req, req.path, [
-            ...parents,
-            route,
-          ]);
-
-          const result = await renderComponentChain(
-            this.routes,
-            loadedData,
-            [...parents, route],
-            html =>
-              options?.handleRender ? options?.handleRender(req, html) : html,
-            app => (options?.appWrapper ? options?.appWrapper(req, app) : app)
-          );
-          return writeExpressResponse(res, result);
         });
       }
 

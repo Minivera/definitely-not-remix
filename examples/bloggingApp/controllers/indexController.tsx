@@ -1,11 +1,10 @@
-import { FunctionComponent, PropsWithChildren } from 'react';
+import { FunctionComponent, PropsWithChildren, Children } from 'react';
 import { Link } from 'wouter';
 import {
   json,
   LoaderComponent,
   DataLoader,
   useLoaderData,
-  useIsParentRoute,
   useIsLoading,
 } from '../../../src';
 
@@ -14,11 +13,13 @@ import { CompletePost } from '../types.ts';
 import { PostsList } from '../client/components/PostsList.tsx';
 
 import { getAllPosts } from './utils/getPosts.ts';
-import { getAllUsers } from './utils/getUsers.ts';
+import { getAllUsers, getCurrentUser } from './utils/getUsers.ts';
 
 export const IndexControllerLoader = async () => {
   const lastFivePosts = await getAllPosts(5);
   const users = await getAllUsers();
+
+  const currentUser = await getCurrentUser();
 
   return json({
     posts: lastFivePosts.map<CompletePost>(post => ({
@@ -26,6 +27,7 @@ export const IndexControllerLoader = async () => {
       user: users.find(user => user.id === post.userId),
     })),
     users,
+    currentUser,
   });
 };
 
@@ -33,19 +35,19 @@ export const Component: FunctionComponent<PropsWithChildren> = ({
   children,
 }) => {
   const loading = useIsLoading();
-  const { posts, users } = useLoaderData<typeof IndexControllerLoader>() || {};
-  const isParent = useIsParentRoute();
-
-  if (isParent) {
-    return <App>{children}</App>;
-  }
+  const { posts, currentUser } =
+    useLoaderData<typeof IndexControllerLoader>() || {};
 
   if (loading) {
-    return <App users={users}>Loading...</App>;
+    return <App>Loading...</App>;
+  }
+
+  if (Children.count(children) > 0) {
+    return <App currentUser={currentUser}>{children}</App>;
   }
 
   return (
-    <App users={users}>
+    <App currentUser={currentUser}>
       <h2>Last five posts</h2>
       <nav>
         <Link href="/posts">All posts</Link> <Link to="/users">All users</Link>

@@ -6,7 +6,7 @@ import { join as pathJoin } from 'node:path/posix';
 import { InternalRoutes } from '../types.ts';
 
 type AwaitableRequest = IncomingMessage & {
-  awaiter: (val: unknown) => void;
+  awaiter: (val: Response | null) => void;
 };
 
 export const resolveAllMatchingLoaders = async (
@@ -33,7 +33,6 @@ export const resolveAllMatchingLoaders = async (
           Object.entries(dataForMatch).map(([key, tupple]) => [key, tupple[1]])
         ),
       });
-      // TODO: Handle returned and thrown errors by the loaders
       if (
         result.status === 200 &&
         result.headers.has('X-Data-Source') &&
@@ -46,7 +45,7 @@ export const resolveAllMatchingLoaders = async (
         }
       }
 
-      (req as unknown as AwaitableRequest).awaiter(null);
+      (req as unknown as AwaitableRequest).awaiter(result);
       res.end();
     });
   }
@@ -76,7 +75,7 @@ export const resolveAllMatchingLoaders = async (
 
     const response = new ServerResponse(newRequest);
 
-    await new Promise(resolve => {
+    const awaitedResponse = await new Promise<Response | null>(resolve => {
       (newRequest as AwaitableRequest).awaiter = resolve;
       (
         subApp as unknown as {
@@ -88,6 +87,14 @@ export const resolveAllMatchingLoaders = async (
         }
       ).handle(newRequest, response);
     });
+
+    if (awaitedResponse && !awaitedResponse.ok) {
+      // If the response was not a valid 20X response, then the user wants to handle the errors.
+      // Throw here so express will catch the error and handle it on its own. We should not handle
+      // errors on react on the server. Let the user create their own error handler.
+      // TODO: Maybe it wouldn't be too magical to build a bridge between the error and React's error boundaries?
+      throw awaitedResponse;
+    }
   } while (pathParts.length);
 
   return dataForMatch;

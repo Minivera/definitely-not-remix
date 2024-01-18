@@ -16,7 +16,7 @@ export const renderLoaderChain = (
       loadersData: Object.fromEntries(
         Object.entries(loaderData).map(([key, tupple]) => [key, tupple[1]])
       ),
-      currentMatch: match,
+      leafRoute: match,
       routesChain: chain,
       currentRoute: chain[0],
       allRoutes,
@@ -52,7 +52,7 @@ export const renderComponentChain = async (
       loadersData={Object.fromEntries(
         Object.entries(loaderData).map(([key, tupple]) => [key, tupple[1]])
       )}
-      currentMatch={match}
+      leafRoute={match}
       routesChain={chain}
       currentRoute={chain[0]}
       allRoutes={allRoutes}

@@ -1,5 +1,5 @@
 import { FunctionComponent, PropsWithChildren, useState } from 'react';
-import { Link, useLocation } from 'wouter';
+import { Link, useLocation, useRoute } from 'wouter';
 import {
   ControllerFunction,
   json,
@@ -50,8 +50,14 @@ export const PostController: {
   },
 
   render: ({ children }) => {
+    const [matched, params] = useRoute('/posts/:id');
+
     return (
-      <DataLoader>
+      <DataLoader
+        shouldReload={(_, loaderParams) =>
+          !matched || loaderParams.id !== params.id
+        }
+      >
         <PostController.component>{children}</PostController.component>
       </DataLoader>
     );
@@ -64,8 +70,8 @@ export const PostController: {
       useLoaderData<typeof PostController.load>() || {};
 
     const [edit, setEdit] = useState(false);
-    const [title, setTitle] = useState(post.title);
-    const [body, setBody] = useState(post.body);
+    const [title, setTitle] = useState(post?.title || '');
+    const [body, setBody] = useState(post?.body || '');
     const [message, setMessage] = useState<string | null>(null);
 
     if (loading) {

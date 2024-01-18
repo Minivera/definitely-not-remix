@@ -6,7 +6,7 @@ import { LoaderContext } from './loaderContext.ts';
 
 export interface ServerContextProviderProps {
   loadersData: Record<string, unknown>;
-  currentMatch: string;
+  leafRoute: string;
   allRoutes: InternalRoutes;
   routesChain: InternalRoutes;
   currentRoute?: InternalRoute;
@@ -17,14 +17,14 @@ export const ServerContextProvider: FunctionComponent<
 > = ({
   children,
   loadersData,
-  currentMatch,
+  leafRoute,
   currentRoute,
   routesChain,
   allRoutes,
 }) => (
   <LoaderContext.Provider
     value={{
-      currentMatch,
+      leafRoute,
       loadersData,
       currentRoute,
       routesChain,

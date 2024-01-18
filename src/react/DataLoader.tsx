@@ -3,65 +3,99 @@ import {
   PropsWithChildren,
   useContext,
   useEffect,
-  useState,
+  useMemo,
 } from 'react';
 
 import { CurrentLoaderContext, LoaderContext } from './loaderContext.ts';
 import { InternalRoute } from '../types.ts';
+import { compileRouteURL, getRouteParams } from './utils.ts';
 
 export interface DataLoaderProps {
   route?: string;
+  shouldReload?:
+    | boolean
+    | ((route: string, params: Record<string, string>) => boolean);
+  shouldIgnoreCache?:
+    | boolean
+    | ((route: string, params: Record<string, string>) => boolean);
 }
 
 export const DataLoader: FunctionComponent<
   PropsWithChildren<DataLoaderProps>
-> = ({ children, route }) => {
-  const [matchedRoute, setMatchedRoute] = useState(() =>
-    typeof window !== 'undefined' ? window.location.toString() : undefined
-  );
+> = ({ children, route, shouldReload, shouldIgnoreCache }) => {
   const serverContext = useContext(LoaderContext);
 
   if (!serverContext) {
-    // TODO: Handle the "no context" state
-    console.error(
+    throw new Error(
       'No server context detected, did you forget to wrap your app in a `ClientContextProvider`?'
     );
-    return null;
   }
 
-  let { loadersData, allRoutes, routesChain, currentRoute, currentMatch } =
+  let { loadersData, allRoutes, routesChain, currentRoute, leafRoute } =
     serverContext;
 
-  const routeMatched =
-    typeof window !== 'undefined'
-      ? matchedRoute === window.location.toString()
-      : true;
+  const currentMatch = useMemo(
+    () => ({
+      location: compileRouteURL(currentRoute?.id || ''),
+      params: getRouteParams(currentRoute?.id || ''),
+    }),
+    [currentRoute?.id]
+  );
 
-  // TODO: Drop this whole thing in favor of asking the consumer when the loaders should update
-  // TODO: and when we should rely on the cache.
+  const shouldReloadValue = useMemo(
+    () =>
+      !currentRoute ||
+      (typeof shouldReload === 'function' &&
+        shouldReload(currentRoute!.id, currentMatch.params)) ||
+      (typeof shouldReload !== 'function' &&
+        typeof shouldReload !== 'undefined' &&
+        shouldReload),
+    [currentRoute?.id, shouldReload, currentMatch]
+  );
+
+  const shouldIgnoreCacheValue = useMemo(
+    () =>
+      currentRoute
+        ? (typeof shouldIgnoreCache === 'function' &&
+            shouldIgnoreCache(currentRoute.id, currentMatch.params)) ||
+          (typeof shouldIgnoreCache !== 'function' &&
+            typeof shouldIgnoreCache !== 'undefined' &&
+            shouldIgnoreCache)
+        : true,
+    [currentRoute?.id, shouldIgnoreCache, currentMatch]
+  );
+
   useEffect(() => {
-    if (typeof window === 'undefined') {
+    if (typeof window === 'undefined' || !serverContext.leafRoute) {
       return;
     }
 
-    if (!routeMatched || !currentRoute) {
-      serverContext.fetchRouteData?.(window.location.toString()).then(() => {
-        setMatchedRoute(window.location.toString());
-      });
+    if (shouldReloadValue) {
+      serverContext.fetchRouteData?.(serverContext.leafRoute);
     }
   }, [
-    routeMatched,
-    currentRoute,
+    shouldReloadValue,
     serverContext.fetchRouteData,
-    setMatchedRoute,
+    serverContext.leafRoute,
   ]);
 
   if (typeof window !== 'undefined') {
-    if (!routeMatched) {
+    // If we don't have a route at the moment, or if we have set ourselves to reload the current route.
+    if (
+      (shouldReloadValue || serverContext.hasLocationChanged) &&
+      currentRoute
+    ) {
       const cachedData = serverContext.getCachedRoute?.(
-        window.location.toString()
+        currentRoute.id,
+        currentMatch.params
       );
-      if (!cachedData) {
+
+      if (
+        // Drop the cache only if we should ignore it from the user, if we don't have a cache data
+        // of if the current route is not in the chain or the chain had been made invalid.
+        shouldIgnoreCacheValue ||
+        !cachedData
+      ) {
         return (
           <CurrentLoaderContext.Provider
             value={{
@@ -75,11 +109,10 @@ export const DataLoader: FunctionComponent<
 
       // If we have some cache we're going to invalidate soon, then use it for now
       // to avoid flashing loaders.
-      loadersData = cachedData.loadersData;
-      allRoutes = cachedData.allRoutes;
-      routesChain = cachedData.routesChain;
-      currentRoute = cachedData.currentRoute;
-      currentMatch = cachedData.currentMatch;
+      loadersData = {
+        ...loadersData,
+        [currentRoute.id]: cachedData,
+      };
     }
   }
 
@@ -111,7 +144,7 @@ export const DataLoader: FunctionComponent<
     <LoaderContext.Provider
       value={{
         ...serverContext,
-        currentMatch,
+        leafRoute,
         loadersData,
         routesChain,
         allRoutes,
