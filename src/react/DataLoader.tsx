@@ -4,6 +4,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useState,
 } from 'react';
 
 import { CurrentLoaderContext, LoaderContext } from './loaderContext.ts';
@@ -34,13 +35,16 @@ export const DataLoader: FunctionComponent<
   let { loadersData, allRoutes, routesChain, currentRoute, leafRoute } =
     serverContext;
 
-  const currentMatch = useMemo(
-    () => ({
-      location: compileRouteURL(currentRoute?.id || ''),
-      params: getRouteParams(currentRoute?.id || ''),
-    }),
-    [currentRoute?.id]
-  );
+  const [loading, setLoading] = useState(false);
+  const [currentMatch, setCurrentMatch] = useState(() => ({
+    location: compileRouteURL(currentRoute?.id || ''),
+    params: getRouteParams(currentRoute?.id || ''),
+  }));
+
+  const actualMatch = {
+    location: compileRouteURL(currentRoute?.id || ''),
+    params: getRouteParams(currentRoute?.id || ''),
+  };
 
   const shouldReloadValue = useMemo(
     () =>
@@ -70,32 +74,52 @@ export const DataLoader: FunctionComponent<
       return;
     }
 
-    if (shouldReloadValue) {
-      serverContext.fetchRouteData?.(serverContext.leafRoute);
+    if (shouldReloadValue && currentRoute) {
+      const newMatch = {
+        location: compileRouteURL(currentRoute.id),
+        params: getRouteParams(currentRoute.id),
+      };
+      setCurrentMatch(newMatch);
+
+      const cachedData = serverContext.getCachedRoute?.(
+        currentRoute.id,
+        newMatch.params
+      );
+
+      if (!shouldIgnoreCacheValue && !!cachedData) {
+        serverContext.setRouteToCache?.(currentRoute.id);
+        return;
+      }
+
+      setLoading(true);
+
+      serverContext.fetchRouteData?.(serverContext.leafRoute).then(() => {
+        setLoading(false);
+      });
     }
   }, [
     shouldReloadValue,
+    shouldIgnoreCacheValue,
+    serverContext.getCachedRoute,
+    serverContext.setRouteToCache,
     serverContext.fetchRouteData,
     serverContext.leafRoute,
+    setLoading,
   ]);
 
   if (typeof window !== 'undefined') {
     // If we don't have a route at the moment, or if we have set ourselves to reload the current route.
     if (
-      (shouldReloadValue || serverContext.hasLocationChanged) &&
+      (shouldReloadValue || serverContext.hasLocationChanged || loading) &&
       currentRoute
     ) {
       const cachedData = serverContext.getCachedRoute?.(
         currentRoute.id,
-        currentMatch.params
+        actualMatch.params
       );
 
-      if (
-        // Drop the cache only if we should ignore it from the user, if we don't have a cache data
-        // of if the current route is not in the chain or the chain had been made invalid.
-        shouldIgnoreCacheValue ||
-        !cachedData
-      ) {
+      // Drop the cache only if we should ignore it from the user or if we don't have a cache data.
+      if (shouldIgnoreCacheValue || !cachedData) {
         return (
           <CurrentLoaderContext.Provider
             value={{

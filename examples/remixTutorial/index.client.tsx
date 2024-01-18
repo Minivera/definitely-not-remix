@@ -1,15 +1,26 @@
+import { FunctionComponent } from 'react';
 import { hydrateRoot } from 'react-dom/client';
-
+import { Router as Wouter, useLocation } from 'wouter';
 import { ClientContextProvider } from '../../src';
 
 import { Root } from './app/Root.tsx';
-import { Router } from './app/Router.tsx';
+import { Router } from './app/Router';
+
+export const RouterPoweredApp: FunctionComponent = () => {
+  const [location] = useLocation();
+
+  return (
+    <ClientContextProvider currentLocation={location}>
+      <Root>
+        <Router />
+      </Root>
+    </ClientContextProvider>
+  );
+};
 
 hydrateRoot(
   document,
-  <ClientContextProvider>
-    <Root>
-      <Router />
-    </Root>
-  </ClientContextProvider>
+  <Wouter>
+    <RouterPoweredApp />
+  </Wouter>
 );

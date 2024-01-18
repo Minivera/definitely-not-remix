@@ -19,6 +19,7 @@ export interface ExtendedContextValue extends LoaderContextValue {
     response: LoaderContextValue;
     location: string;
   }>;
+  setRouteToCache?: (route: string) => unknown | undefined;
   getCachedRoute?: (
     route: string,
     params: Record<string, string>

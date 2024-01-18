@@ -90,11 +90,14 @@ export const ContactComponent: FunctionComponent = () => {
 };
 
 export const Contact: LoaderComponent = () => {
-  // This is to force wouter to render this component on a route match
-  useRoute('/contacts/:contactId');
+  const [matched, params] = useRoute('/contacts/:contactId');
 
   return (
-    <DataLoader>
+    <DataLoader
+      shouldReload={(_, loaderParams) =>
+        !matched || loaderParams.contactId !== params.contactId
+      }
+    >
       <ContactComponent />
     </DataLoader>
   );

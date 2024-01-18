@@ -86,6 +86,21 @@ export const ClientContextProvider: FunctionComponent<
     [contextsCache, setCurrentContext, setContextsCache]
   );
 
+  const setRouteToCache = useCallback(
+    (routeId: string) => {
+      const finalURL = compileRouteURL(routeId);
+
+      setCurrentContext(data => ({
+        ...data,
+        loadersData: {
+          ...data.loadersData,
+          [routeId]: contextsCache[finalURL],
+        },
+      }));
+    },
+    [contextsCache, setCurrentContext, setContextsCache]
+  );
+
   const getCachedRoute = useCallback(
     (route: string, params: Record<string, string>) => {
       try {
@@ -150,6 +165,7 @@ export const ClientContextProvider: FunctionComponent<
         leafRoute: currentLeafRoute,
         routesChain,
         fetchRouteData,
+        setRouteToCache,
         getCachedRoute,
         invalidateCache,
         hasLocationChanged,
