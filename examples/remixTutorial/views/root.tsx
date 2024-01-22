@@ -1,39 +1,69 @@
-import { FunctionComponent, PropsWithChildren } from 'react';
+import {
+  FunctionComponent,
+  PropsWithChildren,
+  useEffect,
+  useState,
+} from 'react';
 import {
   DataLoader,
   LoaderComponent,
+  useGetAction,
   useIsLoading,
   useLoaderData,
 } from '../../../src';
-import { Link } from 'wouter';
+import { useLocation } from 'wouter';
 
 import { RootLoader } from '../controllers/rootController.ts';
+import { ActiveLink } from '../app/ActiveLink.tsx';
 import { Form } from '../app/Form.tsx';
 
 export const RootComponent: FunctionComponent<PropsWithChildren> = ({
   children,
 }) => {
   const loading = useIsLoading();
-  const { contacts } = useLoaderData<typeof RootLoader>() || { contacts: [] };
+  const { contacts, q } = useLoaderData<typeof RootLoader>() || {
+    contacts: [],
+  };
+  const getFormAction = useGetAction();
+
+  const [query, setQuery] = useState<string | null>(null);
+  const [location, setLocation] = useLocation();
+
+  useEffect(() => {
+    setQuery(q);
+  }, [q]);
 
   return (
     <>
       <div id="sidebar">
         <h1>Remix Contacts</h1>
         <div>
-          <form id="search-form" role="search">
+          <Form
+            id="search-form"
+            role="search"
+            onChange={(submit, event) => {
+              const query = (event.target as HTMLInputElement).value;
+
+              event.preventDefault();
+              setQuery(query);
+              setLocation(`${location}?q=${query}`, { replace: true });
+              // Defrost doesn't do any debouncing
+              submit(event);
+            }}
+          >
             <input
               aria-label="Search contacts"
               id="q"
               name="q"
               placeholder="Search"
               type="search"
+              defaultValue={query || ''}
             />
-            <div aria-hidden hidden={true} id="search-spinner" />
-          </form>
-          <Form method="POST">
-            <button type="submit">New</button>
+            <div aria-hidden hidden={!loading} id="search-spinner" />
           </Form>
+          <form action={getFormAction()} method="POST">
+            <button type="submit">New</button>
+          </form>
         </div>
         <nav>
           {loading && (
@@ -45,7 +75,7 @@ export const RootComponent: FunctionComponent<PropsWithChildren> = ({
             <ul>
               {contacts.map(contact => (
                 <li key={contact.id}>
-                  <Link to={`/contacts/${contact.id}`}>
+                  <ActiveLink to={`/contacts/${contact.id}`}>
                     {contact.first || contact.last ? (
                       <>
                         {contact.first} {contact.last}
@@ -54,7 +84,7 @@ export const RootComponent: FunctionComponent<PropsWithChildren> = ({
                       <i>No Name</i>
                     )}{' '}
                     {contact.favorite ? <span>★</span> : null}
-                  </Link>
+                  </ActiveLink>
                 </li>
               ))}
             </ul>
@@ -65,7 +95,9 @@ export const RootComponent: FunctionComponent<PropsWithChildren> = ({
           )}
         </nav>
       </div>
-      <div id="detail">{children}</div>
+      <div id="detail" className={loading ? 'loading' : ''}>
+        {children}
+      </div>
     </>
   );
 };

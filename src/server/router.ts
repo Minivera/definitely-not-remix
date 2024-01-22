@@ -15,6 +15,8 @@ import {
 import { writeExpressResponse } from './response.ts';
 import { resolveAllMatchingLoaders } from './loaders.ts';
 import { renderComponentChain, renderLoaderChain } from './renderer.tsx';
+import { rootRoute } from './constants.ts';
+import { normalizeRouteID } from './utils.ts';
 
 export interface RouterOptions {
   mode?: 'developement' | 'production';
@@ -25,7 +27,12 @@ const convertRouteToInternal = (
   parents: Routes
 ): InternalRoute => ({
   ...route,
-  id: pathJoin(...parents.map(parent => parent.route).concat(route.route)),
+  id:
+    // Special case for the root route. If we detect a user wants this route to always be the parent of everything
+    // and potentially have a separate index, record it as such.
+    !parents.length && route.route === ''
+      ? rootRoute
+      : pathJoin(...parents.map(parent => parent.route).concat(route.route)),
   children: route.children?.map(child =>
     convertRouteToInternal(child, [...parents, route])
   ),
@@ -72,7 +79,7 @@ class Router {
       parents: InternalRoutes
     ) => {
       if (route.render || route.load) {
-        this.app.get(route.id, async (req, res, next) => {
+        this.app.get(normalizeRouteID(route.id), async (req, res, next) => {
           try {
             if (route.load && !route.render) {
               const loadedData = await resolveAllMatchingLoaders(
@@ -87,7 +94,7 @@ class Router {
             // TODO: We should keep the state management on the frontend and only handle dataloading and responses.
             // TODO: In the future, we should change this so we only return the loaded data, not the whole payload
             // TODO: for the context including the current match and other things like that.
-            if (route.load && req.header('X-Data-Only') === 'true') {
+            if (req.header('X-Data-Only') === 'true') {
               const loadedData = await resolveAllMatchingLoaders(
                 req,
                 req.path,
@@ -100,8 +107,10 @@ class Router {
               );
             }
 
-            (global as unknown as { requestLocation: string }).requestLocation =
-              req.originalUrl;
+            (global as unknown as { requestURL: URL }).requestURL = new URL(
+              req.originalUrl,
+              `${req.protocol}://${req.hostname}`
+            );
             // Component nesting. We should load all parent routes first to get the data, then
             // render backwards to get the components and add them as "children" of the parent component.
             const loadedData = await resolveAllMatchingLoaders(req, req.path, [
@@ -122,6 +131,10 @@ class Router {
               .requestLocation;
             return writeExpressResponse(res, result);
           } catch (err) {
+            if (err instanceof Response) {
+              return writeExpressResponse(res, err as Response);
+            }
+
             next(err);
           }
         });
@@ -129,10 +142,14 @@ class Router {
 
       if (route.action) {
         const actionFunc = route.action;
-        this.app.all(route.id, upload.none(), async (req, res) => {
-          const result = await actionFunc(req);
-          return writeExpressResponse(res, result);
-        });
+        this.app.all(
+          normalizeRouteID(route.id),
+          upload.none(),
+          async (req, res) => {
+            const result = await actionFunc(req);
+            return writeExpressResponse(res, result);
+          }
+        );
       }
 
       ['get', 'post', 'put', 'delete', 'patch'].forEach(method => {
@@ -148,7 +165,7 @@ class Router {
 
         const actualFunc = route[method as keyof Route] as ControllerFunction;
         this.app[method as keyof Express](
-          route.id,
+          normalizeRouteID(route.id),
           async (req: express.Request, res: express.Response) => {
             const result = await actualFunc(req);
             return writeExpressResponse(res, result);

@@ -19,12 +19,15 @@ import { getLocation } from './constants.ts';
 
 const fetchAllMatchingLoaders = async (route: string) => {
   // TODO: Handle errors.
-  return fetch(route, {
-    method: 'GET',
-    headers: {
-      'X-Data-Only': 'true',
-    },
-  }).then(res => res.json()) as Promise<LoaderContextValue>;
+  return fetch(
+    `${route}${window.location.search.length ? window.location.search : ''}`,
+    {
+      method: 'GET',
+      headers: {
+        'X-Data-Only': 'true',
+      },
+    }
+  ).then(res => res.json()) as Promise<LoaderContextValue>;
 };
 
 export interface ClientContextProviderProps {
@@ -149,12 +152,12 @@ export const ClientContextProvider: FunctionComponent<
     routesChain.map(route => route.id).join('_');
 
   useEffect(() => {
-    if (!currentLeafRoute) {
+    if (!currentLeafRoute || !hasLocationChanged) {
       return;
     }
 
     fetchRouteData(currentLeafRoute);
-  }, [currentLeafRoute]);
+  }, [currentLeafRoute, hasLocationChanged]);
 
   return (
     <LoaderContext.Provider

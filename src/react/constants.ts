@@ -1,6 +1,9 @@
 export const getLocation = () =>
   typeof window !== 'undefined'
-    ? window.location.href.substring(window.location.origin.length)
-    : (
-        global as unknown as { requestLocation: string }
-      ).requestLocation.toString();
+    ? window.location.pathname
+    : (global as unknown as { requestURL: URL }).requestURL.pathname;
+
+export const getURL = () =>
+  typeof window !== 'undefined'
+    ? new URL(window.location.toString())
+    : (global as unknown as { requestURL: URL }).requestURL;

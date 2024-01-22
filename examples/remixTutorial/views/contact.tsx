@@ -1,9 +1,15 @@
 import { FunctionComponent } from 'react';
-import { DataLoader, LoaderComponent, useLoaderData } from '../../../src';
+import {
+  DataLoader,
+  LoaderComponent,
+  useGetAction,
+  useLoaderData,
+} from '../../../src';
+import { useRoute } from 'wouter';
 
 import { ContactRecord } from '../data.ts';
 import { ContactLoader } from '../controllers/contactController.ts';
-import { useRoute } from 'wouter';
+import { Form } from '../app/Form.tsx';
 
 const Favorite: FunctionComponent<{
   contact: Pick<ContactRecord, 'favorite'>;
@@ -11,7 +17,7 @@ const Favorite: FunctionComponent<{
   const favorite = contact.favorite;
 
   return (
-    <form method="post">
+    <Form method="POST">
       <button
         aria-label={favorite ? 'Remove from favorites' : 'Add to favorites'}
         name="favorite"
@@ -19,7 +25,7 @@ const Favorite: FunctionComponent<{
       >
         {favorite ? '★' : '☆'}
       </button>
-    </form>
+    </Form>
   );
 };
 
@@ -27,6 +33,7 @@ export const ContactComponent: FunctionComponent = () => {
   const { contact } = useLoaderData<typeof ContactLoader>() || {
     contact: null,
   };
+  const getFormAction = useGetAction();
 
   if (!contact) {
     return <div id="contact">Loading...</div>;
@@ -41,7 +48,6 @@ export const ContactComponent: FunctionComponent = () => {
           src={contact.avatar}
         />
       </div>
-
       <div>
         <h1>
           {contact.first || contact.last ? (
@@ -53,7 +59,6 @@ export const ContactComponent: FunctionComponent = () => {
           )}{' '}
           <Favorite contact={contact} />
         </h1>
-
         {contact.twitter ? (
           <p>
             <a href={`https://twitter.com/${contact.twitter}`}>
@@ -61,17 +66,14 @@ export const ContactComponent: FunctionComponent = () => {
             </a>
           </p>
         ) : null}
-
         {contact.notes ? <p>{contact.notes}</p> : null}
-
         <div>
-          <form action="edit">
+          <form action={getFormAction('edit')}>
             <button type="submit">Edit</button>
           </form>
-
           <form
-            action="destroy"
-            method="post"
+            action={getFormAction('destroy')}
+            method="POST"
             onSubmit={event => {
               const response = confirm(
                 'Please confirm you want to delete this record.'

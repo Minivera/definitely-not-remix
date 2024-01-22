@@ -4,25 +4,25 @@ import { Router as Wouter, Route, Switch } from 'wouter';
 import { Index } from '../views/_index.tsx';
 import { Contact } from '../views/contact.tsx';
 import { Root } from '../views/root.tsx';
+import { EditContact } from '../views/editContact.tsx';
 
 export const Router: FunctionComponent = () => (
   <Wouter>
-    <Switch>
-      <Route path="/">
-        <Root>
+    <Root>
+      <Switch>
+        <Route path="/">
           <Index />
-        </Root>
-      </Route>
-      <Route path="/contacts/:contactId">
-        <Root>
+        </Route>
+        <Route path="/contacts/:contactId">
           <Contact />
-        </Root>
-      </Route>
-      <Route>
-        <Root>
+        </Route>
+        <Route path="/contacts/:contactId/edit">
+          <EditContact />
+        </Route>
+        <Route>
           <Index />
-        </Root>
-      </Route>
-    </Switch>
+        </Route>
+      </Switch>
+    </Root>
   </Wouter>
 );

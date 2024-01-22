@@ -37,7 +37,7 @@ export const redirect = (
 export const writeExpressResponse = async (
   res: express.Response,
   nodeResponse: Response
-) => {
+): Promise<express.Response> => {
   res.statusMessage = nodeResponse.statusText;
   res.status(nodeResponse.status);
 
@@ -70,4 +70,6 @@ export const writeExpressResponse = async (
   } else {
     res.end();
   }
+
+  return res;
 };

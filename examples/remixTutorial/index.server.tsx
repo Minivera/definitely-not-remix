@@ -7,30 +7,48 @@ import { Router } from 'wouter';
 
 import { Root } from './app/Root.tsx';
 import { Root as RootView } from './views/root.tsx';
-import { Index } from './views/_index.tsx';
 import { Contact } from './views/contact.tsx';
 import { RootAction, RootLoader } from './controllers/rootController.ts';
 import { ContactLoader } from './controllers/contactController.ts';
+import { EditContact } from './views/editContact.tsx';
+import { NotFoundLoader } from './controllers/404Controller.ts';
+import { Index } from './views/_index.tsx';
+import { EditContactAction } from './controllers/editContactController.ts';
+import { DestroyContactAction } from './controllers/destroyContactController.ts';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 const router = frameworkRouter([
   {
-    route: '/',
+    route: '',
     load: RootLoader,
     action: RootAction,
     render: RootView,
     children: [
+      {
+        route: '/',
+        render: Index,
+      },
       {
         route: '/contacts/:contactId',
         load: ContactLoader,
         render: Contact,
       },
       {
-        route: '*',
-        render: Index,
+        route: '/contacts/:contactId/edit',
+        load: ContactLoader,
+        render: EditContact,
+        action: EditContactAction,
+      },
+      {
+        route: '/contacts/:contactId/destroy',
+        action: DestroyContactAction,
       },
     ],
+  },
+  {
+    route: '*',
+    load: NotFoundLoader,
   },
 ]);
 
