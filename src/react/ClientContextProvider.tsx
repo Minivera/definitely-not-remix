@@ -30,10 +30,28 @@ const fetchAllMatchingLoaders = async (route: string) => {
   ).then(res => res.json()) as Promise<LoaderContextValue>;
 };
 
+/**
+ * Properties of the `ClientContextProvider`.
+ */
 export interface ClientContextProviderProps {
+  /**
+   * Current location of the application if the application is using any kind of client router.
+   * The provider will update all the loaded data based on the URL if this property changes when it
+   * renders.
+   */
   currentLocation?: string;
 }
 
+/**
+ * Provider to add the loader context to the application. This provider is required to use the `DataLoader`
+ * functionality and any of the hooks. You can omit it if you're building an application without any server
+ * data backing it up.
+ *
+ * The provider is not route-aware and will not update the loaded data based on the current URL or history stack.
+ * The `currentLocation` prop must be used to provide the provider with the current location if you're writing a router
+ * powered application, such as one using React-Router or Wouter. Make sure to render the provider as a children of
+ * your router for it to receive updates when the route changes.
+ */
 export const ClientContextProvider: FunctionComponent<
   PropsWithChildren<ClientContextProviderProps>
 > = ({ currentLocation = window.location.pathname, children }) => {
