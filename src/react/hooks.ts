@@ -48,6 +48,20 @@ export const useInvalidate = () => {
  * and fetch the data loaded from that loader.
  *
  * @example
+ * // Given this router
+ * const router = frameworkRouter([
+ *   {
+ *     route: '/users',
+ *     render: Users,
+ *     children: [
+ *       {
+ *         route: '/:userId',
+ *         render: Parent,
+ *       },
+ *     ],
+ *   },
+ * ]);
+ *
  * const Parent = () => (
  *   // This renders for the route `/users/:userId`
  *   <DataLoader>
@@ -73,6 +87,20 @@ export const useLoaderData = <T extends LoaderFunction = LoaderFunction>() => {
  * outside the normal loader tree.
  *
  * @example
+ * // Given this router
+ * const router = frameworkRouter([
+ *   {
+ *     route: '/users',
+ *     render: Users,
+ *     children: [
+ *       {
+ *         route: '/:userId',
+ *         render: Parent,
+ *       },
+ *     ],
+ *   },
+ * ]);
+ *
  * const Parent = () => (
  *   // This renders for the route `/users/:userId`
  *   <DataLoader>
@@ -111,6 +139,20 @@ export const useLocationURL = () => {
  * `DataLoader` parent, then use that parent's route as the source of the action.
  *
  * @example
+ * // Given this router
+ * const router = frameworkRouter([
+ *   {
+ *     route: '/users',
+ *     render: Users,
+ *     children: [
+ *       {
+ *         route: '/:userId',
+ *         render: Parent,
+ *       },
+ *     ],
+ *   },
+ * ]);
+ *
  * const Parent = () => (
  *   // This renders for the route `/users/:userId`
  *   <DataLoader>
@@ -161,6 +203,20 @@ export const useGetAction = (route?: string) => {
  * Otherwise, it will return the route's HTML.
  *
  * @example
+ * // Given this router
+ * const router = frameworkRouter([
+ *   {
+ *     route: '/users',
+ *     render: Users,
+ *     children: [
+ *       {
+ *         route: '/:userId',
+ *         render: Parent,
+ *       },
+ *     ],
+ *   },
+ * ]);
+ *
  * const Parent = () => (
  *   // This renders for the route `/users/:userId`
  *   <DataLoader>

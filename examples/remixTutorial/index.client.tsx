@@ -1,14 +1,7 @@
 import { FunctionComponent } from 'react';
 import { hydrateRoot } from 'react-dom/client';
 import { Router as Wouter, useLocation } from 'wouter';
-import {
-  ClientContextProvider,
-  redirect,
-  json,
-  DataLoader,
-  frameworkRouter,
-  Scripts,
-} from '../../src';
+import { ClientContextProvider } from '../../src';
 
 import { Root } from './app/Root.tsx';
 import { Router } from './app/Router';

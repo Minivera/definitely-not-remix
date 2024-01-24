@@ -57,17 +57,37 @@ class Router {
     this.app.use(express.urlencoded({ extended: true }));
   }
 
+  /**
+   * Function to add middlewares to the internal server from the `serve` function. The middlewares added here will
+   * be called before any endpoint. This can be useful if your server implementation requires middlewares.
+   */
   use(middleware: express.Handler) {
     this.app.use(middleware);
   }
 
+  /**
+   * Serves the router as a node.js application, which will listen for any HTTP requests on the given port and handle
+   * them. Returns a promise that will resolve once the server has started listening.
+   */
   async serve(
     port: number,
     options?: {
+      /**
+       * This wrapper will wrap the entire server-rendered application configured using the router. If you have
+       * providers you need to define at the very top of your React tree, this function can be used to add them.
+       * The full node.js request is provided is you need it for providers like routes. The application itself must
+       * be added to the wrapper as children.
+       */
       appWrapper?: (
         request: Request,
-        component: ReactElement | null
+        application: ReactElement | null
       ) => ReactElement | null;
+
+      /**
+       * Function called when after the application has been fully rendered, but before it is served to the client.
+       * Use this function if you need to apply any transformations to the rendered HTML, the transformed HTML will then
+       * be served in the response.
+       */
       handleRender?: (
         request: Request,
         html: string

@@ -11,16 +11,120 @@ import { CurrentLoaderContext, LoaderContext } from './loaderContext.ts';
 import { InternalRoute } from '../types.ts';
 import { compileRouteURL, getRouteParams } from './utils.ts';
 
+/**
+ * The properties accepted by the `DataLoader` component.
+ */
 export interface DataLoaderProps {
+  /**
+   * Optional prop to overwrite the loaded route to any route in the current branch.
+   *
+   * It is recommended to use the  `useRouteLoaderData` first if you only need access to the data in a single location
+   * as it has the same capabilities. This will change the current route segment for all children `DataLoaders`, which
+   * allows you to start chaining again, see the example.
+   *
+   * @example
+   * // Given this router
+   * const router = frameworkRouter([
+   *   {
+   *     route: '/users',
+   *     render: Parent,
+   *     children: [
+   *       {
+   *         route: '/:userId',
+   *         render: ComponentWithData,
+   *       },
+   *     ],
+   *   },
+   * ]);
+   *
+   * const Parent = () => (
+   *   // This loads the `/users` branch segment's data
+   *   <DataLoader><ComponentWithData /></DataLoader>
+   * );
+   *
+   * const ComponentWithData = () => (
+   *   // This loads the `/users/:userID` branch segment's data
+   *   <DataLoader><Child /></DataLoader>
+   * );
+   *
+   * const Child = () => (
+   *   // This loads the `/users` branch segment's data and sets it as the current node in the branch
+   *   <DataLoader route="/users"><Other /></DataLoader>
+   * );
+   *
+   * const Child = () => (
+   *   // This loads the `/users/:userID` branch segment's data, again
+   *   <DataLoader route="/users"><Other /></DataLoader>
+   * );
+   */
   route?: string;
+
+  /**
+   * Function or boolean that will be checked on every update of the `DataLoader`. If this is true on an update,
+   * the loader will request an update to its stored data from the `ClientContextProvider` and start the loading
+   * process. By default, if the requested data is cached, it will display the cached data as it loads.
+   */
   shouldReload?:
     | boolean
     | ((route: string, params: Record<string, string>) => boolean);
+
+  /**
+   * Function or boolean that will be checked whenever the component is loading, and we detect that we have data cached,
+   * to see if we should use the cache we've found. If it returns true, the cache will be ignored and the data will be
+   * loaded as normal.
+   */
   shouldIgnoreCache?:
     | boolean
     | ((route: string, params: Record<string, string>) => boolean);
 }
 
+/**
+ * The DataLoader component will prepare the loader data for all children of the React tree to make it available to
+ * hooks called in children components. Loader data is accessed using the route chain provided by the server for the
+ * current location.
+ *
+ * For example, this router:
+ *
+ * ```
+ * const router = frameworkRouter([
+ *   {
+ *     route: '/',
+ *     children: [
+ *       {
+ *         route: '/users',
+ *         children: [
+ *           {
+ *             route: '/:userId',
+ *           },
+ *         ],
+ *       },
+ *     ],
+ *   },
+ * ]);
+ * ```
+ *
+ * If the user opens the route `/`, the loader chain, or branch, would only consist of the route `{ route: '/' }`. In
+ * this case, the first DataLoader component encountered would load the data from the loader of route `/` and any
+ * subsequent data loader will load nothing as we've reached the end of the branch.
+ *
+ * If the user instead opens the route `/users/:userId`, then the branch would be an array of:
+ * `[{ route: '/' }, { route: '/users' }, { route: '/users/:userId' }]`
+ *
+ * We could define a tree of DataLoader in the React application to load the loader data of each route in the chain,
+ * like this:
+ *
+ * ```
+ * <DataLoader> // Loads `/`
+ *   <ComponentConsumingData>
+ *     <DataLoader> // Loads `/users`
+ *       <ComponentConsumingMoreData>
+ *          {...}
+ *       </ComponentConsumingMoreData>
+ *     </DataLoader>
+ *   </ComponentConsumingData>
+ * </DataLoader>
+ * ```
+ */
 export const DataLoader: FunctionComponent<
   PropsWithChildren<DataLoaderProps>
 > = ({ children, route, shouldReload, shouldIgnoreCache }) => {
