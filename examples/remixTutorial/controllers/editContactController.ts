@@ -1,7 +1,7 @@
 import { ControllerFunction, redirect } from '../../../src';
 import invariant from 'tiny-invariant';
 
-import { updateContact } from '../data';
+import { updateContact } from '../models/data.ts';
 
 export const EditContactAction: ControllerFunction = async request => {
   const { params } = request;

@@ -1,17 +1,17 @@
-import { JSONFilePreset } from 'lowdb/node';
 import { ControllerFunction, json } from '../../../src';
 
-import { Todo } from '../types.ts';
-
-interface Data {
-  currentID: number;
-  todos: Todo[];
-}
-
-const db = await JSONFilePreset<Data>('db.json', { currentID: 0, todos: [] });
+import {
+  clearAllCompletedTodos,
+  createTodo,
+  deleteTodo,
+  getAllTodos,
+  getTodo,
+  toggleAllTodos,
+  updateTodo,
+} from '../models/todos.ts';
 
 export const TodoLoader = async () => {
-  const { todos } = db.data;
+  const todos = getAllTodos();
 
   return json({
     todos,
@@ -19,8 +19,6 @@ export const TodoLoader = async () => {
 };
 
 export const TodoAction: ControllerFunction = async request => {
-  const { currentID, todos } = db.data;
-
   if (request.body.action === 'create') {
     const newTodoTitle = request.body.title;
 
@@ -37,15 +35,7 @@ export const TodoAction: ControllerFunction = async request => {
       );
     }
 
-    const newTodo: Todo = {
-      id: `${currentID + 1}`,
-      title: newTodoTitle,
-      completed: false,
-    };
-
-    db.data.currentID++;
-    db.data.todos.push(newTodo);
-    await db.write();
+    const newTodo = await createTodo(newTodoTitle);
 
     return json({
       ok: true,
@@ -59,7 +49,7 @@ export const TodoAction: ControllerFunction = async request => {
     const newTodoTitle = request.body.title;
     const newTodoCompleted = request.body.completed;
 
-    const existingTodo = todos.find(todo => todo.id === todoId);
+    const existingTodo = getTodo(todoId);
     if (!existingTodo) {
       return json(
         {
@@ -73,28 +63,20 @@ export const TodoAction: ControllerFunction = async request => {
       );
     }
 
-    await db.update(({ todos }) =>
-      todos.forEach(todo => {
-        if (todo.id === existingTodo.id) {
-          todo.title = newTodoTitle;
-          todo.completed = newTodoCompleted;
-        }
-      })
-    );
+    const updated = await updateTodo(existingTodo, {
+      title: newTodoTitle,
+      completed: newTodoCompleted,
+    });
 
     return json({
       ok: true,
       action: request.body.action,
-      todo: existingTodo,
+      todo: updated,
     });
   }
 
   if (request.body.action === 'toggleAll') {
-    await db.update(({ todos }) =>
-      todos.forEach(todo => {
-        todo.completed = request.body.checked;
-      })
-    );
+    await toggleAllTodos(request.body.checked);
 
     return json({
       ok: true,
@@ -103,9 +85,7 @@ export const TodoAction: ControllerFunction = async request => {
   }
 
   if (request.body.action === 'clearCompleted') {
-    db.data.todos = todos.filter(todo => !todo.completed);
-
-    await db.write();
+    await clearAllCompletedTodos();
 
     return json({
       ok: true,
@@ -116,7 +96,7 @@ export const TodoAction: ControllerFunction = async request => {
   if (request.body.action === 'delete') {
     const todoId = request.body.id;
 
-    const existingTodo = todos.find(todo => todo.id === todoId);
+    const existingTodo = getTodo(todoId);
     if (!existingTodo) {
       return json(
         {
@@ -130,9 +110,7 @@ export const TodoAction: ControllerFunction = async request => {
       );
     }
 
-    db.data.todos = todos.filter(todo => todo.id !== existingTodo.id);
-
-    await db.write();
+    await deleteTodo(existingTodo);
 
     return json({
       ok: true,

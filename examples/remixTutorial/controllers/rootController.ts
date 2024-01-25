@@ -1,6 +1,6 @@
 import { json, Request, redirect } from '../../../src';
 
-import { createEmptyContact, getContacts } from '../data.ts';
+import { createEmptyContact, getContacts } from '../models/data.ts';
 
 export const RootLoader = async (request: Request) => {
   const url = new URL(request.url);
