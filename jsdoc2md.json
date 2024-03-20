@@ -1,7 +1,7 @@
 {
   "source": {
     "includePattern": ".+\\.ts(doc|x)?$",
-    "excludePattern": ".+\\.(test|spec).ts"
+    "excludePattern": ".+\\.(test|spec).ts(doc|x)?"
   },
   "plugins": [
     "plugins/markdown",
@@ -9,7 +9,7 @@
   ],
   "babel": {
     "extensions": ["ts", "tsx"],
-    "ignore": ["**/*.(test|spec).ts"],
+    "ignore": ["**/*.(test|spec).ts(doc|x)?"],
     "babelrc": false,
     "presets": [["@babel/preset-env", { "targets": { "node": true } }], "@babel/preset-typescript"]
   }

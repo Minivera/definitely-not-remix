@@ -6,7 +6,7 @@
     "example:blog": "cd ./examples/bloggingApp && tsx ./index.server.tsx",
     "example:todo": "cd ./examples/todoMVC && tsx ./index.server.tsx",
     "example:remix": "cd ./examples/remixTutorial && tsx ./index.server.tsx",
-    "generate:docs": "jsdoc2md  --files src/**/*.ts --configure ./jsdoc2md.json > ./REFERENCE.md"
+    "generate:docs": "jsdoc2md --files src/**/*.ts --files src/**/*.tsx --configure ./jsdoc2md.json > ./REFERENCE.md"
   },
   "type": "module",
   "keywords": [

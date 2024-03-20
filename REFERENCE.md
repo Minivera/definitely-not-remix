@@ -39,6 +39,55 @@ loader, or any of its parents, are loading. Any children loading data will not a
 <dt><a href="#json">json(value, responseInit)</a></dt>
 <dd><p>Creates a complete framework response that returns a JSON body for a client request. This is a utility function
 tht will return everything you need to return JSON from a loader or an action call, including headers.</p></dd>
+<dt><a href="#ClientContextProvider">ClientContextProvider()</a></dt>
+<dd><p>Provider to add the loader context to the application. This provider is required to use the <code>DataLoader</code>
+functionality and any of the hooks. You can omit it if you're building an application without any server
+data backing it up.</p>
+<p>The provider is not route-aware and will not update the loaded data based on the current URL or history stack.
+The <code>currentLocation</code> prop must be used to provide the provider with the current location if you're writing a router
+powered application, such as one using React-Router or Wouter. Make sure to render the provider as a children of
+your router for it to receive updates when the route changes.</p></dd>
+<dt><a href="#DataLoader">DataLoader()</a></dt>
+<dd><p>The DataLoader component will prepare the loader data for all children of the React tree to make it available to
+hooks called in children components. Loader data is accessed using the route chain provided by the server for the
+current location.</p>
+<p>For example, this router:</p>
+<pre class="prettyprint source"><code>const router = frameworkRouter([
+  {
+    route: '/',
+    children: [
+      {
+        route: '/users',
+        children: [
+          {
+            route: '/:userId',
+          },
+        ],
+      },
+    ],
+  },
+]);
+</code></pre>
+<p>If the user opens the route <code>/</code>, the loader chain, or branch, would only consist of the route <code>{ route: '/' }</code>. In
+this case, the first DataLoader component encountered would load the data from the loader of route <code>/</code> and any
+subsequent data loader will load nothing as we've reached the end of the branch.</p>
+<p>If the user instead opens the route <code>/users/:userId</code>, then the branch would be an array of:
+<code>[{ route: '/' }, { route: '/users' }, { route: '/users/:userId' }]</code></p>
+<p>We could define a tree of DataLoader in the React application to load the loader data of each route in the chain,
+like this:</p>
+<pre class="prettyprint source"><code>&lt;DataLoader> // Loads `/`
+  &lt;ComponentConsumingData>
+    &lt;DataLoader> // Loads `/users`
+      &lt;ComponentConsumingMoreData>
+         {...}
+      &lt;/ComponentConsumingMoreData>
+    &lt;/DataLoader>
+  &lt;/ComponentConsumingData>
+&lt;/DataLoader>
+</code></pre></dd>
+<dt><a href="#Scripts">Scripts()</a></dt>
+<dd><p>This returns a script to be injected into the head of the document to store the server context
+for reuse in the client part of the application. This does nothing outside of SSR.</p></dd>
 </dl>
 
 <a name="useIsLoading"></a>
@@ -277,3 +326,64 @@ tht will return everything you need to return JSON from a loader or an action ca
 | value | <code>any</code> | <p>The value to add as the request's body, stringifyed to JSON.</p> |
 | responseInit | <code>ResponseInit</code> \| <code>undefined</code> | <p>The init parameters for a normal node.js response, which will be used to construct the response returned.</p> |
 
+<a name="ClientContextProvider"></a>
+
+## ClientContextProvider()
+<p>Provider to add the loader context to the application. This provider is required to use the <code>DataLoader</code>
+functionality and any of the hooks. You can omit it if you're building an application without any server
+data backing it up.</p>
+<p>The provider is not route-aware and will not update the loaded data based on the current URL or history stack.
+The <code>currentLocation</code> prop must be used to provide the provider with the current location if you're writing a router
+powered application, such as one using React-Router or Wouter. Make sure to render the provider as a children of
+your router for it to receive updates when the route changes.</p>
+
+**Kind**: global function  
+<a name="DataLoader"></a>
+
+## DataLoader()
+<p>The DataLoader component will prepare the loader data for all children of the React tree to make it available to
+hooks called in children components. Loader data is accessed using the route chain provided by the server for the
+current location.</p>
+<p>For example, this router:</p>
+<pre class="prettyprint source"><code>const router = frameworkRouter([
+  {
+    route: '/',
+    children: [
+      {
+        route: '/users',
+        children: [
+          {
+            route: '/:userId',
+          },
+        ],
+      },
+    ],
+  },
+]);
+</code></pre>
+<p>If the user opens the route <code>/</code>, the loader chain, or branch, would only consist of the route <code>{ route: '/' }</code>. In
+this case, the first DataLoader component encountered would load the data from the loader of route <code>/</code> and any
+subsequent data loader will load nothing as we've reached the end of the branch.</p>
+<p>If the user instead opens the route <code>/users/:userId</code>, then the branch would be an array of:
+<code>[{ route: '/' }, { route: '/users' }, { route: '/users/:userId' }]</code></p>
+<p>We could define a tree of DataLoader in the React application to load the loader data of each route in the chain,
+like this:</p>
+<pre class="prettyprint source"><code>&lt;DataLoader> // Loads `/`
+  &lt;ComponentConsumingData>
+    &lt;DataLoader> // Loads `/users`
+      &lt;ComponentConsumingMoreData>
+         {...}
+      &lt;/ComponentConsumingMoreData>
+    &lt;/DataLoader>
+  &lt;/ComponentConsumingData>
+&lt;/DataLoader>
+</code></pre>
+
+**Kind**: global function  
+<a name="Scripts"></a>
+
+## Scripts()
+<p>This returns a script to be injected into the head of the document to store the server context
+for reuse in the client part of the application. This does nothing outside of SSR.</p>
+
+**Kind**: global function  
