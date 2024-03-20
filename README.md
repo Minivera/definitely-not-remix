@@ -2,7 +2,7 @@
 
 Defrost is a non-apologetic [Remix](https://remix.run/) clone created to explore the inner workings of the framework,
 without a lot of the magic that powers it. If you're interested in rebuilding the wheel to get rid of the fancy
-decisions the Remix team took, then read on. If you're looking to build great full-stack apps with node.js, I recommend 
+decisions the Remix team took, then read on. If you're looking to build great full-stack apps with node.js, I recommend
 using Remix instead.
 
 > Defrost's name was inspired by various pronunciations of DEFNR, an acronym meaning "DEFinitely Not Remix."
@@ -43,8 +43,8 @@ specific handlers for any HTTP method if you'd like.
 
 ## How to use
 
-> The framework has not been released as a library and likely will not be published anytime soon. If you really want to 
-> use it, install it by cloning this repository. The examples in the documentation will assume it has been 
+> The framework has not been released as a library and likely will not be published anytime soon. If you really want to
+> use it, install it by cloning this repository. The examples in the documentation will assume it has been
 > published to NPM.
 
 To use the framework, you'll need to define a server and client entrypoint. I'll dive into each of those in their
@@ -67,11 +67,9 @@ import { frameworkRouter } from 'defrost';
 
 const router = frameworkRouter([]);
 
-router
-  .serve(8080)
-  .then(() => {
-    console.log('Server listening on http://localhost:8080');
-  });
+router.serve(8080).then(() => {
+  console.log('Server listening on http://localhost:8080');
+});
 ```
 
 Run `node index.server.js` and the app should start on port `8080`. The application doesn't have any routes at the
@@ -290,11 +288,11 @@ const router = frameworkRouter([
                 // Remember that all routes are relative to their parents, this is hit on `/users/:userId`. You can
                 // keep or omit the starting slash. We use the express pattern for route parameters.
                 route: '/:userId',
-              }
-            ]
-          }
-        ]
-      }
+              },
+            ],
+          },
+        ],
+      },
     ],
   },
 ]);
@@ -304,12 +302,7 @@ If we access the path `/users/bob`, the router will look at the route tree and g
 path that matches:
 
 ```typescript
-[
-  {route: ''},
-  {route: '/'},
-  {route: '/users'},
-  {route: '/:userId'},
-]
+[{ route: '' }, { route: '/' }, { route: '/users' }, { route: '/:userId' }];
 ```
 
 We can look at the `<DataLoader>` component as a pointer to an element of this array. The first data loader will look at
@@ -360,28 +353,26 @@ const HelloLoader = () => {
   return json({
     message: 'Hello, World!',
   });
-}
+};
 
 const HelloAction = request => {
   return json({
     ok: true,
-    ...request.body
+    ...request.body,
   });
-}
+};
 
 const router = frameworkRouter([
   {
     route: '/hello',
     loader: HelloLoader,
     action: HelloAction,
-  }
+  },
 ]);
 
-router
-  .serve(8080)
-  .then(() => {
-    console.log('Server listening on http://localhost:8080');
-  });
+router.serve(8080).then(() => {
+  console.log('Server listening on http://localhost:8080');
+});
 ```
 
 The action takes a single argument, the request received by the server. The request uses the `express` typings,
@@ -417,20 +408,18 @@ const ApiAction = request => {
     case 'DELETE':
     // Do the delete action
   }
-}
+};
 
 const router = frameworkRouter([
   {
     route: '/api',
     action: ApiAction,
-  }
+  },
 ]);
 
-router
-  .serve(8080)
-  .then(() => {
-    console.log('Server listening on http://localhost:8080');
-  });
+router.serve(8080).then(() => {
+  console.log('Server listening on http://localhost:8080');
+});
 ```
 
 This single action can handle all the methods. We might want to break it up for convenience and organization,
@@ -443,18 +432,24 @@ import { frameworkRouter, json } from 'defrost';
 const router = frameworkRouter([
   {
     route: '/api',
-    get: request => { /* Do the get action */ },
-    post: request => { /* Do the post action */ },
-    patch: request => { /* Do the patch action */ },
-    delete: request => { /* Do the delete action */ },
-  }
+    get: request => {
+      /* Do the get action */
+    },
+    post: request => {
+      /* Do the post action */
+    },
+    patch: request => {
+      /* Do the patch action */
+    },
+    delete: request => {
+      /* Do the delete action */
+    },
+  },
 ]);
 
-router
-  .serve(8080)
-  .then(() => {
-    console.log('Server listening on http://localhost:8080');
-  });
+router.serve(8080).then(() => {
+  console.log('Server listening on http://localhost:8080');
+});
 ```
 
 Every valid HTTP method is supported by defrost. To see the list of available methods, please see the [express
@@ -497,12 +492,12 @@ hydrateRoot(
   document,
   <ClientContextProvider>
     <head>
-      <Scripts/>
+      <Scripts />
     </head>
     <body>
-    <DataLoader>
-      <App/>
-    </DataLoader>
+      <DataLoader>
+        <App />
+      </DataLoader>
     </body>
   </ClientContextProvider>
 );
@@ -526,9 +521,10 @@ export const App = () => {
     <div>
       {message ? <marquee>{message}</marquee> : <span>Loading...</span>}
       <form action="/" method="POST">
-        <label for="message">Message:</label><br/>
-        <input type="text" id="message" name="message" defaultValue={message}/>
-        <input type="submit" value="Submit"/>
+        <label for="message">Message:</label>
+        <br />
+        <input type="text" id="message" name="message" defaultValue={message} />
+        <input type="submit" value="Submit" />
       </form>
     </div>
   );
@@ -551,7 +547,7 @@ import { getMessage, saveMessage } from './backend';
 const HomeLoader = () => {
   // Get message from some backend
   const message = getMessage();
-  
+
   return json({
     message,
   });
@@ -584,14 +580,14 @@ router
   });
 ```
 
-It is also possible to use a client fetch call rather than a full form submit using the provided hooks. Defrost has 
+It is also possible to use a client fetch call rather than a full form submit using the provided hooks. Defrost has
 two hooks you can use to trigger a loader reload:
 
-- `useInvalidate`, which fully invalidates the loader data and triggers a new request for all the loader data. This 
+- `useInvalidate`, which fully invalidates the loader data and triggers a new request for all the loader data. This
   happens fully on the client and will not cause a page refresh. See the
   [dynamic application section](#building-a-dynamic-applications) for more details on handling data loading.
-- `useFetch`, which returns a `fetch` function that will automatically trigger the loader data invalidation when 
-  the request resolves. The fetch implementation is very basic and will not do anything more than invalidating the 
+- `useFetch`, which returns a `fetch` function that will automatically trigger the loader data invalidation when
+  the request resolves. The fetch implementation is very basic and will not do anything more than invalidating the
   cache, make sure to handle any errors on your end.
 
 Using these hooks, we can rewrite the previous example like this:
@@ -616,40 +612,41 @@ export const App = () => {
       }),
     });
   };
-  
+
   return (
     <div>
       {message ? <marquee>{message}</marquee> : <span>Loading...</span>}
       <form action="/" method="POST">
-        <label for="message">Message:</label><br/>
-        <input type="text" id="message" name="message" defaultValue={message}/>
-        <input type="submit" value="Submit"/>
+        <label for="message">Message:</label>
+        <br />
+        <input type="text" id="message" name="message" defaultValue={message} />
+        <input type="submit" value="Submit" />
       </form>
     </div>
   );
 };
 ```
 
-In this version, the fetch call will submit the form without reloading the page. When the action resolves, the 
-loader cache will be invalidated and the `message` will become `undefined`, prompting the loader. Once the 
-client provider has successfully fetched the loader data, the `message` will be set to its new value and shown to the 
+In this version, the fetch call will submit the form without reloading the page. When the action resolves, the
+loader cache will be invalidated and the `message` will become `undefined`, prompting the loader. Once the
+client provider has successfully fetched the loader data, the `message` will be set to its new value and shown to the
 user.
 
 #### Building a dynamic applications
 
-The previous example showed how to submit a form using only client-side logic to avoid any full page reload. 
+The previous example showed how to submit a form using only client-side logic to avoid any full page reload.
 Defrost's client provider is capable of reloading parts of a loader chain, or an entirely new loader chain, on demand.
-It doesn't decide for you when this reload should happen, it instead waits for specific prompts given by your 
+It doesn't decide for you when this reload should happen, it instead waits for specific prompts given by your
 application, giving you full control over your data.
 
-The `useFetch` and `useInvalidate` (which is used by `useFetch`) are one way to trigger a reload, but these hooks 
-invalidate the entire loader cache, triggering a complete refresh of your application. This is not always ideal, as 
-it will cause a full reload, even if only a single loader has changed due to the action. In 
-applications using client-side routers, for example, a full page reload may trigger the loading state of the 
+The `useFetch` and `useInvalidate` (which is used by `useFetch`) are one way to trigger a reload, but these hooks
+invalidate the entire loader cache, triggering a complete refresh of your application. This is not always ideal, as
+it will cause a full reload, even if only a single loader has changed due to the action. In
+applications using client-side routers, for example, a full page reload may trigger the loading state of the
 application's root rather than only the current route.
 
-The `<DataLoader />` component has a property called `shouldReload` that solves this problem. Let's look at how it 
-works by first updating our static application with the use of a client router. For this example, we'll be using the 
+The `<DataLoader />` component has a property called `shouldReload` that solves this problem. Let's look at how it
+works by first updating our static application with the use of a client router. For this example, we'll be using the
 awesome [wouter](https://github.com/molefrog/wouter) library.
 
 ```tsx
@@ -663,28 +660,26 @@ import { User } from './user';
 
 hydrateRoot(
   document,
-  (
-    <html>
-        <head>
-          <Scripts />
-        </head>
-        <body>
-        <Wouter>
-          {/* The provider should be inside the router */}
-          <ClientContextProvider>
-            <Switch>
-              <Route path="/">
-                <Index/>
-              </Route>
-              <Route path="/users/:userId">
-                <User />
-              </Route>
-            </Switch>
-          </ClientContextProvider>
-        </Wouter>
-        </body>
-    </html>
-  )
+  <html>
+    <head>
+      <Scripts />
+    </head>
+    <body>
+      <Wouter>
+        {/* The provider should be inside the router */}
+        <ClientContextProvider>
+          <Switch>
+            <Route path="/">
+              <Index />
+            </Route>
+            <Route path="/users/:userId">
+              <User />
+            </Route>
+          </Switch>
+        </ClientContextProvider>
+      </Wouter>
+    </body>
+  </html>
 );
 ```
 
@@ -707,15 +702,15 @@ export const User = () => {
         !matched || loaderParams.userId !== params.userId
       }
     >
-      <UserComponent/>
+      <UserComponent />
     </DataLoader>
   );
-}
+};
 ```
 
-The `shouldReload` prop of the data loader takes a function with two arguments, the current route (the segment of 
-the URL that was matched for this loader), and the parameters extracted from that route. If the function returns 
-`true`, that specific data loader and its descendants will reload, leaving every ancestor data loader untouched. 
+The `shouldReload` prop of the data loader takes a function with two arguments, the current route (the segment of
+the URL that was matched for this loader), and the parameters extracted from that route. If the function returns
+`true`, that specific data loader and its descendants will reload, leaving every ancestor data loader untouched.
 This function is called on every render.
 
 In addition, you can track if the data is loading or not using the `useIsLoading` hook, like this:
@@ -734,8 +729,8 @@ const UserComponent = () => {
 /* ... */
 ```
 
-With `shouldReload`, the data loaders will update if the route doesn't match. However, the provider has to receive a 
-request to reload from a data loader before it will trigger the invalidation process. This could lead to some 
+With `shouldReload`, the data loaders will update if the route doesn't match. However, the provider has to receive a
+request to reload from a data loader before it will trigger the invalidation process. This could lead to some
 flickering as the app is not set to be loading until that invalidation happens.
 
 To solve this, you can pass the current location from the router to the provider:
@@ -751,12 +746,12 @@ import { User } from './user';
 
 const App = () => {
   const [location] = useLocation();
-  
+
   return (
     <ClientContextProvider currentLocation={location}>
       <Switch>
         <Route path="/">
-          <Index/>
+          <Index />
         </Route>
         <Route path="/users/:userId">
           <User />
@@ -764,27 +759,25 @@ const App = () => {
       </Switch>
     </ClientContextProvider>
   );
-}
+};
 
 hydrateRoot(
   document,
-  (
-    <html>
-        <head>
-          <Scripts />
-        </head>
-        <body>
-        <Wouter>
-          <App />
-        </Wouter>
-        </body>
-    </html>
-  )
+  <html>
+    <head>
+      <Scripts />
+    </head>
+    <body>
+      <Wouter>
+        <App />
+      </Wouter>
+    </body>
+  </html>
 );
 ```
 
-Now that the provider is location-aware, it will know to reload the entire data loader chain if the current URL 
-doesn't match the route it had previously loaded. This will avoid any flicker and make sure all components are 
+Now that the provider is location-aware, it will know to reload the entire data loader chain if the current URL
+doesn't match the route it had previously loaded. This will avoid any flicker and make sure all components are
 loading when they should.
 
 ### Using Vite
@@ -802,7 +795,7 @@ const router = frameworkRouter(/* ... */);
 const main = async () => {
   // 1. Create the vite server
   const vite = await createViteServer({
-    server: {middlewareMode: true},
+    server: { middlewareMode: true },
     appType: 'custom',
     root: __dirname,
   });
