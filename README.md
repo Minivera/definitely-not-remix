@@ -1,9 +1,9 @@
 # Defrost
 
-Defrost is a non-apologetic [Remix](https://remix.run/) clone created to explore the inner workings of the framework
-and get rid of a lot of the magic that powers it. If you're interested in rebuilding the wheel to get rid of the fancy
-decision the Remix took, then read on. If you're looking to build great full-stack apps with node.js, I recommend using
-Remix instead.
+Defrost is a non-apologetic [Remix](https://remix.run/) clone created to explore the inner workings of the framework,
+without a lot of the magic that powers it. If you're interested in rebuilding the wheel to get rid of the fancy
+decisions the Remix team took, then read on. If you're looking to build great full-stack apps with node.js, I recommend 
+using Remix instead.
 
 > Defrost's name was inspired by various pronunciations of DEFNR, an acronym meaning "DEFinitely Not Remix."
 
@@ -14,14 +14,14 @@ Defrost is:
 - A light full-stack web framework focused on the core web APIs available to most browsers.
 - A client framework that allows you to forget about data loading and focus on data presentation.
 - Transparent in the ways it works, giving you full control over how you want your app to build and behave.
-- Build with an MVC architecture in mind, and I make it clear.
+- Build with an MVC architecture in mind, without hiding it.
 
 Defrost is NOT:
 
 - A production ready-framework or tool, use at your own risks.
 - Using any magic to make your life easier. You'll have to define your exact router and handle any transpilation on
   your own.
-- A full-fledged framework full of magic, you need to define everything.
+- A full-fledged framework, the client and server won't behave the same.
 - A CLI tool. Defrost doesn't ship with any CLI tooling, you'll have to run it with pure node.
 - Router-powered on the client. It doesn't ship with any router implementation, you're free to use whichever you like (I
   like [wouter](https://www.npmjs.com/package/wouter)).
@@ -42,6 +42,10 @@ The framework provides the same `loader` and `action` functions that Remix offer
 specific handlers for any HTTP method if you'd like.
 
 ## How to use
+
+> The framework has not been released as a library and likely will not be published anytime soon. If you really want to 
+> use it, install it by cloning this repository. The examples in the documentation will assume it has been 
+> published to NPM.
 
 To use the framework, you'll need to define a server and client entrypoint. I'll dive into each of those in their
 own section.
@@ -436,30 +440,13 @@ however, which would be done using the specific functions like this:
 // index.server.js
 import { frameworkRouter, json } from 'defrost';
 
-const ApiAction = request => {
-  switch (request.method) {
-    case 'GET':
-    // Do the get action
-    case 'POST':
-    // Do the post action
-    case 'PATCH':
-    // Do the patch action
-    case 'DELETE':
-    // Do the delete action
-  }
-}
-
 const router = frameworkRouter([
   {
     route: '/api',
-    get: request => { /* Do the get action */
-    },
-    post: request => { /* Do the post action */
-    },
-    patch: request => { /* Do the patch action */
-    },
-    delete: request => { /* Do the delete action */
-    },
+    get: request => { /* Do the get action */ },
+    post: request => { /* Do the post action */ },
+    patch: request => { /* Do the patch action */ },
+    delete: request => { /* Do the delete action */ },
   }
 ]);
 
@@ -478,7 +465,7 @@ documentation](https://expressjs.com/en/4x/api.html#routing-methods).
 Deforst provides utilities for defining your API and loading needs on the backend, but also components and hooks to
 help with loading this data in real-time on the frontend. One of the guiding principles of defrost is to let you
 define your application in any way you want. For this reason, the framework does _not_ provide any router or
-structure for your application.
+structure.
 
 There are two ways to build your application with defrost:
 
@@ -487,8 +474,8 @@ There are two ways to build your application with defrost:
 
 #### Building a static application
 
-A static application is where the data is loaded once from the loaders, and injected into the components, but any
-further action from the client will either cause a full page reload or a partial loader reload. Let's build one
+A static application is where the data is loaded once from the loaders, and injected into the components. Any
+further action from the client will either cause a full page reload or a full loader reload. Let's build one
 together.
 
 First, every defrost client application requires two things:
@@ -644,22 +631,22 @@ export const App = () => {
 ```
 
 In this version, the fetch call will submit the form without reloading the page. When the action resolves, the 
-loader cache will be invalidated and the `message` will become `undefined`, prompting the loading message. Once the 
-client provider has successfully fetched the loader data, the message will be set to its new value and shown to the 
+loader cache will be invalidated and the `message` will become `undefined`, prompting the loader. Once the 
+client provider has successfully fetched the loader data, the `message` will be set to its new value and shown to the 
 user.
 
 #### Building a dynamic applications
 
 The previous example showed how to submit a form using only client-side logic to avoid any full page reload. 
-Defrost's client provider is capable of reloading parts of a loader chan, or an entirely new loader chain, on demand.
+Defrost's client provider is capable of reloading parts of a loader chain, or an entirely new loader chain, on demand.
 It doesn't decide for you when this reload should happen, it instead waits for specific prompts given by your 
 application, giving you full control over your data.
 
 The `useFetch` and `useInvalidate` (which is used by `useFetch`) are one way to trigger a reload, but these hooks 
 invalidate the entire loader cache, triggering a complete refresh of your application. This is not always ideal, as 
-it will cause the entire application to reload, even if only a single loader has changed due to the action. In 
+it will cause a full reload, even if only a single loader has changed due to the action. In 
 applications using client-side routers, for example, a full page reload may trigger the loading state of the 
-application's root rather than only the route.
+application's root rather than only the current route.
 
 The `<DataLoader />` component has a property called `shouldReload` that solves this problem. Let's look at how it 
 works by first updating our static application with the use of a client router. For this example, we'll be using the 
@@ -728,7 +715,8 @@ export const User = () => {
 
 The `shouldReload` prop of the data loader takes a function with two arguments, the current route (the segment of 
 the URL that was matched for this loader), and the parameters extracted from that route. If the function returns 
-true, that specific data loader and its descendants will reload, leaving every ancestor data loader untouched.
+`true`, that specific data loader and its descendants will reload, leaving every ancestor data loader untouched. 
+This function is called on every render.
 
 In addition, you can track if the data is loading or not using the `useIsLoading` hook, like this:
 
