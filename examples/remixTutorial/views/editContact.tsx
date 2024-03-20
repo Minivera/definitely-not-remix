@@ -6,7 +6,7 @@ import { ContactLoader } from '../controllers/contactController.ts';
 
 const EditContactComponent: FunctionComponent = () => {
   const { contact } = useLoaderData<typeof ContactLoader>();
-  const [_, setLocation] = useLocation();
+  const [, setLocation] = useLocation();
 
   return (
     <form id="contact-form" method="post">

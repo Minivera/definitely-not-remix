@@ -7,7 +7,7 @@ import {
 } from '../../../src';
 import { useRoute } from 'wouter';
 
-import { ContactRecord } from '../data.ts';
+import { ContactRecord } from '../models/data.ts';
 import { ContactLoader } from '../controllers/contactController.ts';
 import { Form } from '../app/Form.tsx';
 

@@ -245,18 +245,8 @@ export const DataLoader: FunctionComponent<
   }
 
   if (route) {
-    // If we provided an explicit route, load this one and do not touch the route chain
-    return (
-      <CurrentLoaderContext.Provider
-        value={{
-          state: !loadersData ? 'LOADING' : 'LOADED',
-          data: loadersData?.[route],
-          route: routesChain.find(route => route.id === currentRoute?.id),
-        }}
-      >
-        {children}
-      </CurrentLoaderContext.Provider>
-    );
+    // If we provided an explicit route, load this one and move the route chain
+    currentRoute = routesChain.find(route => route.id === currentRoute?.id);
   }
 
   // Otherwise, get the next route and load the loader data of the current route.
